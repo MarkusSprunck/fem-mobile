@@ -1,0 +1,213 @@
+<!doctype html>
+
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="initial-scale=1">
+<title>Mobile FEM Example</title>
+<style>
+.main {
+	margin: 10px;
+	background-color: #000;
+	overflow: hidden;
+}
+
+.svg {
+	margin: 0 auto;
+	height: 98%;
+	position: absolute;
+	padding-bottom: 90%;
+	overflow: visible;
+	text-anchor: end;
+	z-index: 0
+}
+
+.svg polygon {
+	stroke: #0F0F0F;
+	stroke-width: 0.4;
+	stroke-linejoin: round;
+}
+</style>
+
+<script type="text/javascript" src="FemMobile/FemMobile.nocache.js"></script>
+<script type="text/javascript" src="rendermodel.js"></script>
+<script type="text/javascript" src="dat.gui.min.js"></script>
+
+</head>
+
+<body class='main'>
+
+	<div id="datgui" style="position: absolute; top: 0px; right: 0px; z-index: 3;"></div>
+
+	<svg xmlns="http://www.w3.org/2000/svg" class="svg" id="mySVGGui" viewBox="0 0 400 550">		 
+		 <g id="svgHeadLine">
+		<a xlink:href="https://plus.google.com/u/0/117292523089281814301?rel=author" id="svgHeadLineLink"> </a></g>
+		 <g id="svgElements" />
+  	 	 <g id="svgFixed" />
+  		 <g id="svgArrows" />
+  		 <g id="svgLegend" />
+  		 <g id="svgStatusLine" />
+    </svg>
+
+	<noscript>
+		<div
+			style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">
+			Your web browser must have JavaScript enabled in order for this application to display correctly.</div>
+	</noscript>
+
+	<script type="text/javascript">
+		/**
+		 * Global variables 
+		 */
+		var modelRenderer;
+		var initReady = false;
+		var gui = new dat.GUI({
+			autoPlace : false
+		});
+
+		/** 
+		 * Helper to show frames per seconds.
+		 * source: http://www.html5gamedevs.com/topic/1828-how-to-calculate-fps-in-plain-javascript
+		 */
+		var fps = {
+			startTime : 0,
+			frameNumber : 0,
+			getFPS : function() {
+				this.frameNumber++;
+				var d = new Date().getTime(), currentTime = (d - this.startTime) / 1000, result = this.frameNumber / currentTime;
+				if (currentTime > 1) {
+					this.startTime = new Date().getTime();
+					this.frameNumber = 0;
+				}
+				return result.toFixed(1);
+			}
+		};
+
+		/**
+		 * Called by a timer defined in class Fem_sample.java 
+		 */
+		function setModel(inputModel) {
+
+			if (!initReady) {
+				modelRenderer = new ModelRenderer();
+				modelRenderer.setHeadLine("Mobile Finite Element Simulation");
+
+				// Create simple GUI and display for devices without sensor data
+				gui.add(modelRenderer, 'beta', -90, 90).step(0.1).name('Rotate X-Axis').listen();
+				gui.add(modelRenderer, 'gamma', -90, 90).step(0.1).name('Rotate Y-Axis').listen();
+				var element = document.getElementById('datgui');
+				element.appendChild(gui.domElement);
+
+				initReady = true;
+			} else {
+				// Render SVG
+				elements = JSON.parse(inputModel);
+				modelRenderer.draw_elements(elements);
+
+				// Show Dat.GUI for desktop browser
+				gui.domElement.hidden = (typeof window.orientation !== "undefined");
+
+				// Update statusline
+				var b = Math.round(modelRenderer.beta);
+				var g = Math.round(modelRenderer.gamma);
+				modelRenderer.setStatusLineText(modelRenderer.orientation + ', β=' + b + ', γ=' + g + ', ' + fps.getFPS() + 'FPS');
+			}
+		}
+
+		/**
+		 * The window.orientation is different for iOS and Android
+		 */
+		var checkOrientation = function(eventData) {
+			var previousOrientation = window.orientation;
+			if (typeof previousOrientation !== "undefined") {
+				var ua = navigator.userAgent.toLowerCase();
+				var isAndroid = ua.indexOf("android") > -1;
+				if (isAndroid) {
+					if (!previousOrientation || previousOrientation === 90) {
+						modelRenderer.orientation = 'Normal portrait';
+					} else if (previousOrientation === 0) {
+						modelRenderer.orientation = 'Landscape, rotated clockwise';
+					} else if (previousOrientation === 180) {
+						modelRenderer.orientation = 'Landscape, rotated counterclockwise';
+					} else if (previousOrientation === -90) {
+						modelRenderer.orientation = 'Portrait, upside down';
+					}
+				} else {
+					if (!previousOrientation || previousOrientation === 0) {
+						modelRenderer.orientation = 'Normal portrait';
+					} else if (previousOrientation === -90) {
+						modelRenderer.orientation = 'Landscape, rotated clockwise';
+					} else if (previousOrientation === 90) {
+						modelRenderer.orientation = 'Landscape, rotated counterclockwise';
+					} else if (previousOrientation === 180) {
+						modelRenderer.orientation = 'Portrait, upside down';
+					}
+				}
+			}
+		};
+
+		/**
+		 * Android doesn't always fire orientationChange on 180 degree turns
+		 */
+		setInterval(checkOrientation, 1000);
+
+		function resizeElements() {
+			checkOrientation(null);
+		};
+		window.onresize = resizeElements;
+
+		var deviceorientation = function(eventData) {
+			if (typeof modelRenderer !== "undefined") {
+				var beta;
+				var gamma;
+				if (modelRenderer.orientation == 'Normal portrait') {
+					beta = -eventData.beta;
+					gamma = -eventData.gamma;
+				} else if (modelRenderer.orientation == 'Landscape, rotated clockwise') {
+					beta = -eventData.gamma;
+					gamma = eventData.beta;
+				} else if (modelRenderer.orientation == 'Landscape, rotated counterclockwise') {
+					beta = eventData.gamma;
+					gamma = -eventData.beta;
+				} else if (modelRenderer.orientation == 'Portrait, upside down') {
+					beta = eventData.beta;
+					gamma = eventData.gamma;
+				}
+
+				if (modelRenderer.rotate) {
+					temp = gamma;
+					gamma = beta;
+					beta = -temp;
+				}
+
+				if (initReady) {
+					modelRenderer.beta = beta;
+					modelRenderer.gamma = gamma;
+					window.updateForces();
+				}
+			}
+		}
+		window.addEventListener('deviceorientation', deviceorientation, false);
+
+		function getBeta() {
+			return '' + modelRenderer.beta;
+		}
+
+		function getGamma() {
+			return '' + modelRenderer.gamma;
+		}
+
+		function setBeta(value) {
+			modelRenderer.beta = value;
+		}
+
+		function setGamma(value) {
+			modelRenderer.gamma = value;
+		}
+
+		window.addEventListener("resize", checkOrientation, false);
+		window.addEventListener("orientationchange", checkOrientation, false);
+	</script>
+
+</body>
+</html>
