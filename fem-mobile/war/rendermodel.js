@@ -44,7 +44,7 @@ function ModelRenderer() {
 	this.factorDisplacement = 1.0;
 
 	this.beta = 0.0;
-	this.gamma = 0.0;
+	this.gamma = -60.0;
 
 	this.rotate = false;
 	this.display_scale = true;
