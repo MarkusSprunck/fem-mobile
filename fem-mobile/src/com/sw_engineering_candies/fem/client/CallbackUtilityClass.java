@@ -42,27 +42,26 @@ public class CallbackUtilityClass {
 
 	static Double beta = 0.0;
 
-	static Double gamma = -60.0;
+	static Double gamma = 0.0;
+	
+	static boolean isGravityActive = true;
 
 	public CallbackUtilityClass() {
 		final String inputModel = ModelFactory.createEiffelTowerModel();
 		model.createModel(inputModel);
-		solve();
-		setModelGlobal(model.getJSON(), beta, gamma);
+		final Vector forces = model.caluculateInputForces(beta, gamma);
+		model.solve(forces);
+		setModelGlobal(model.getJSON());
 	}
 
 	public void updateModel() {
-		getForcesFromGui();
-		solve();
-		setModelGlobal(model.getJSON(), beta, gamma);
-	}
-
-	private void solve() {
+		getValuesFromGui();
 		final Vector forces = model.caluculateInputForces(beta, gamma);
 		model.solve(forces);
+		setModelGlobal(model.getJSON());
 	}
 
-	public static void getForcesFromGui() {
+	public static void getValuesFromGui() {
 
 		final String currentBetaNew = getBeta();
 		if (null != currentBetaNew && !currentBetaNew.isEmpty()) {
@@ -73,19 +72,25 @@ public class CallbackUtilityClass {
 		if (null != currentGammaNew && !currentGammaNew.isEmpty()) {
 			gamma = Double.valueOf(currentGammaNew);
 		}
+		
+		final String currentIsGravityActive = isGravityActive();
+		if (null != currentIsGravityActive && !currentIsGravityActive.isEmpty()) {
+			isGravityActive = Boolean.parseBoolean(currentIsGravityActive);
+		}
 	}
 
 	public static native void exportStaticMethod() /*-{
-		$wnd.updateForces = $entry(@com.sw_engineering_candies.fem.client.CallbackUtilityClass::getForcesFromGui());
+		$wnd.updateForces = $entry(@com.sw_engineering_candies.fem.client.CallbackUtilityClass::getValuesFromGui());
 	}-*/;
 
-	public static native void setModelGlobal(String model, Double beta, Double gamma)
+	public static native void setModelGlobal(String model)
 	/*-{
 		$wnd.setModel(model);
-		$wnd.setGamma(gamma);
-		$wnd.setBeta(beta);
 	}-*/;
 
+	
+
+	
 	public static native String getBeta()
 	/*-{
 		return $wnd.getBeta();
@@ -94,6 +99,11 @@ public class CallbackUtilityClass {
 	public static native String getGamma()
 	/*-{
 		return $wnd.getGamma();
+	}-*/;
+	
+	public static native String isGravityActive()
+	/*-{
+		return $wnd.isGravityActive();
 	}-*/;
 
 }

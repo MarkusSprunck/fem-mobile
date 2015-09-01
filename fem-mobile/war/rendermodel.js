@@ -44,7 +44,9 @@ function ModelRenderer() {
 	this.factorDisplacement = 1.0;
 
 	this.beta = 0.0;
-	this.gamma = -60.0;
+	this.gamma = -0.0000001;
+	this.isGravityActive = false;
+	this.selecedElementId = null;
 
 	this.rotate = false;
 	this.display_scale = true;
@@ -54,6 +56,53 @@ function ModelRenderer() {
 	this.maxColor = -20;
 
 	this.showDeltaX = false;
+
+	this.graphic = document.getElementById("mySVGGui");
+	this.mouseDownX = null;
+	this.mouseDownY = null;
+
+	var _that = this;
+
+	// Handle start
+	var dragEndHandler = function(event) {
+		event.preventDefault();
+		_that.mouseDownX = null;
+		_that.mouseDownY = null;
+		_that.alpha = 0.0;
+		_that.gamma = 0.00001;
+		_that.selecedElementId = null;
+	}
+	this.graphic.addEventListener('mouseup', dragEndHandler, false);
+	this.graphic.addEventListener('touchend', dragEndHandler, false);
+
+	// Handle move
+	var dragHandler = function(event) {
+		event.preventDefault();
+		var elementSVG = _that.getPoygonElementSVG('ArrowForce', "svgForce");
+		if (null != elementSVG) {
+			var isVisible = _that.selecedElementId != null;
+			if (isVisible) {
+				var pointsSVG = "";
+				var x2 = event.clientX | event.touches[0].clientX;
+				var y2 = event.clientY | event.touches[0].clientY;
+				pointsSVG += [ _that.mouseDownX, _that.mouseDownY ].join(',') + ' ';
+				pointsSVG += [ x2, y2 ].join(',') + ' ';
+				elementSVG.setAttribute('points', pointsSVG.trim());
+
+				if (!_that.isGravityActive) {
+					_that.alpha = -y2 + _that.mouseDownY;
+					_that.gamma = -x2 + _that.mouseDownX;
+				}
+			}
+			elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width: 2.0; visibility:" + ((false) ? "visible" : "hidden"));
+		}
+	}
+	this.graphic.addEventListener('mousemove', dragHandler, false);
+	this.graphic.addEventListener('touchmove', dragHandler, false);
+
+	ModelRenderer.prototype.toDegrees = function(angle) {
+		return angle * (180 / Math.PI);
+	}
 
 	ModelRenderer.prototype.getColor = function(mean) {
 		mean = -1.8 * Math.PI / (this.maxColor - this.minColor) * mean;
@@ -191,6 +240,8 @@ function ModelRenderer() {
 			this.minColor = Math.min(deltaArea / 3.0, this.minColor);
 			this.maxColor = Math.max(deltaArea / 3.0, this.maxColor);
 		}
+		this.minColor = Math.min(this.minColor, -0.1);
+		this.maxColor = Math.max(this.maxColor, 0.1);
 
 		// render elements
 		for (var ele = elements.length - 1; ele >= 0; ele--) {
@@ -210,10 +261,24 @@ function ModelRenderer() {
 					this.drawVector(x, y, x, y + element.y_force * this.factorForce, false, (element.y_force > 0.0), element.id);
 				}
 			}
-			var elementSVG = this.getPoygonElementSVG('E' + (ele + 1), "svgElements");
+			var _that = this;
+			var id = 'E' + (ele + 1);
+			var elementSVG = this.getPoygonElementSVG(id, "svgElements");
 			if (null != elementSVG) {
 				elementSVG.setAttribute('points', pointsSVG.trim());
 				elementSVG.setAttribute('style', "fill:" + this.getColor(deltaArea / 3.0) + ";");
+				elementSVG.addEventListener('mousedown', function(event) {
+					event.preventDefault();
+					_that.mouseDownX = event.clientX;
+					_that.mouseDownY = event.clientY;
+					_that.selecedElementId = event.target.id;
+				}, false);
+				elementSVG.addEventListener('touchstart', function(event) {
+					event.preventDefault();
+					_that.mouseDownX = event.touches[0].clientX;
+					_that.mouseDownY = event.touches[0].clientY;
+					_that.selecedElementId = event.target.id;
+				}, false);
 			}
 		}
 
