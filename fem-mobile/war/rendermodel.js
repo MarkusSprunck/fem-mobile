@@ -41,7 +41,7 @@ function ModelRenderer() {
 	this.offset_y = 480;
 
 	this.factorForce = 0.02;
-	this.factorDisplacement = 1.0;
+	this.factorDisplacement = 0.01;
 
 	this.beta = 0.0;
 	this.gamma = -0.0000001;
@@ -68,7 +68,7 @@ function ModelRenderer() {
 		event.preventDefault();
 		_that.mouseDownX = null;
 		_that.mouseDownY = null;
-		_that.alpha = 0.0;
+		_that.beta = 0.0;
 		_that.gamma = 0.00001;
 		_that.selecedElementId = null;
 	}
@@ -90,7 +90,7 @@ function ModelRenderer() {
 				elementSVG.setAttribute('points', pointsSVG.trim());
 
 				if (!_that.isGravityActive) {
-					_that.alpha = -y2 + _that.mouseDownY;
+					_that.beta = -y2 + _that.mouseDownY;
 					_that.gamma = -x2 + _that.mouseDownX;
 				}
 			}
@@ -289,7 +289,7 @@ function ModelRenderer() {
 
 	ModelRenderer.prototype.drawVector = function(startX, startY, endX, endY, horizontal, positive, ele) {
 
-		var length = 5;
+		var length = 3;
 		var isVisible = Math.abs(startX - endX) + Math.abs(startY - endY) > length;
 
 		var pointsSVG = "";

@@ -114,14 +114,16 @@ public class Solver {
 	 */
 	public void solve(final Vector forces) {
 		this.inputForces = forces;
-		this.solutionDisplacements = BandMatrixFull.solve(stiffnessRearanged, inputForces, 400);
+		this.solutionDisplacements = BandMatrixFull.solve(stiffnessRearanged, inputForces, 500);
 		this.stiffness.times(solutionDisplacements, solutionForces);
 	}
 
 	/**
 	 * Simulate gravity based on the sensor data of the mobile device 
+	 * @param selecedElementId 
+	 * @param isGravityActive 
 	 */
-	public Vector caluculateInputForces(final double beta, final double gamma) {
+	public Vector caluculateInputForces(final double beta, final double gamma, boolean isGravityActive, String selecedElementId) {
 
 		// Calculate forces based on mobile sensor data
 		final double yForce = 2 * Math.sin(-beta / 180 * Math.PI);
@@ -130,20 +132,34 @@ public class Solver {
 		// Create forces for nodes which are not fixed
 		final Vector forces = new Vector(inputForces.getMaxRows());
 		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
+
+			double fy = yForce;
+			double fx = xForce;
+			String currentElementId = "E" + elementId;
+			if (currentElementId.equals(selecedElementId) && !isGravityActive) {
+				fy *= 50;
+				fx *= 50;
+			} 
+			else {
+				fy *= 0.00000001;
+				fx *= 0.00000001;
+			}
+
 			final double area = calculateAreaOfElement(elementId);
 			for (int cornerId = 1; cornerId < 4; cornerId++) {
 				final int nodeId = getNodeIdByElementId(elementId, cornerId);
 
 				if (!isNodeFixedInYAxis(nodeId)) {
 					double valueY = forces.getValue(nodeId * 2 - 1);
-					forces.setValue(nodeId * 2 - 1, valueY + yForce * area);
+					forces.setValue(nodeId * 2 - 1, valueY + fy * area);
 				}
 
 				if (!isNodeFixedInXAxis(nodeId)) {
 					double valueX = forces.getValue(nodeId * 2 - 2);
-					forces.setValue(nodeId * 2 - 2, valueX + xForce * area);
+					forces.setValue(nodeId * 2 - 2, valueX + fx * area);
 				}
 			}
+
 		}
 		return forces;
 	}

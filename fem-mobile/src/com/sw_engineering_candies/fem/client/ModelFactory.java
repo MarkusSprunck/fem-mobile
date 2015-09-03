@@ -558,9 +558,9 @@ public class ModelFactory {
 		result.append("D 1 y 0.0").append("\n");
 		result.append("D 2 y 0.0").append("\n");
 		result.append("D 24 y 0.0").append("\n");
-		result.append("D 25 x 0.0").append("\n");
+//		result.append("D 25 x 0.0").append("\n");
 		result.append("D 25 y 0.0").append("\n");
-		result.append("F 13 y 0.0").append("\n");
+		result.append("F 13 y 0.01").append("\n");
 		return result.toString();
 	}
 

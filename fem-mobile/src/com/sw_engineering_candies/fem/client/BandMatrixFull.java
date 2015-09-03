@@ -173,7 +173,7 @@ public final class BandMatrixFull {
 		// rsold = r' * r
 		double rsold = r.dotProduct(r);
 
-		while (i++ < maxNumberOfIterations && rsnew > 1e-16) {
+		while (i++ < maxNumberOfIterations && rsnew > 1e-21) {
 			// Ap = A * p
 			A.times(p, Ap);
 
