@@ -44,20 +44,82 @@ import com.google.gwt.user.client.Timer;
  */
 public class FemMobile implements EntryPoint {
 
-	CallbackUtilityClass callbackUtilityClass;
+	final static Solver model = new Solver();
+
+	static Double beta = 0.0;
+
+	static Double gamma = 0.0;
+
+	static boolean isGravityActive = true;
+
+	public FemMobile() {
+		final String inputModel = ModelFactory.createEiffelTowerModel();
+		model.createModel(inputModel);
+		final Vector forces = model.caluculateInputForces(beta, gamma);
+		model.solve(forces);
+		setModelGlobal(model.getJSON());
+	}
+
+	public void updateModel() {
+		getValuesFromGui();
+		final Vector forces = model.caluculateInputForces(beta, gamma);
+		model.solve(forces);
+		setModelGlobal(model.getJSON());
+	}
+
+	public static void getValuesFromGui() {
+
+		final String currentBetaNew = getBeta();
+		if (null != currentBetaNew && !currentBetaNew.isEmpty()) {
+			beta = Double.valueOf(currentBetaNew);
+		}
+
+		final String currentGammaNew = getGamma();
+		if (null != currentGammaNew && !currentGammaNew.isEmpty()) {
+			gamma = Double.valueOf(currentGammaNew);
+		}
+
+		final String currentIsGravityActive = isGravityActive();
+		if (null != currentIsGravityActive && !currentIsGravityActive.isEmpty()) {
+			isGravityActive = Boolean.parseBoolean(currentIsGravityActive);
+		}
+	}
+
+	public static native void exportStaticMethod() /*-{
+		$wnd.updateForces = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getValuesFromGui());
+	}-*/;
+
+	public static native void setModelGlobal(String model)
+	/*-{
+		$wnd.setModel(model);
+	}-*/;
+
+	public static native String getBeta()
+	/*-{
+		return $wnd.getBeta();
+	}-*/;
+
+	public static native String getGamma()
+	/*-{
+		return $wnd.getGamma();
+	}-*/;
+
+	public static native String isGravityActive()
+	/*-{
+		return $wnd.isGravityActive();
+	}-*/;
 
 	/**
 	 * This is the entry point method.
 	 */
 	@Override
 	public void onModuleLoad() {
-		callbackUtilityClass = new CallbackUtilityClass();
-		CallbackUtilityClass.exportStaticMethod();
+		exportStaticMethod();
 
 		final Timer timerGraficUpdate = new Timer() {
 			@Override
 			public void run() {
-				callbackUtilityClass.updateModel();
+				updateModel();
 			}
 		};
 		timerGraficUpdate.scheduleRepeating(125);

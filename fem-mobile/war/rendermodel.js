@@ -83,8 +83,8 @@ function ModelRenderer() {
 			var isVisible = _that.selecedElementId != null;
 			if (isVisible) {
 				var pointsSVG = "";
-				var x2 = event.clientX | event.touches[0].clientX;
-				var y2 = event.clientY | event.touches[0].clientY;
+				var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
+				var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
 				pointsSVG += [ _that.mouseDownX, _that.mouseDownY ].join(',') + ' ';
 				pointsSVG += [ x2, y2 ].join(',') + ' ';
 				elementSVG.setAttribute('points', pointsSVG.trim());
@@ -94,7 +94,7 @@ function ModelRenderer() {
 					_that.gamma = -x2 + _that.mouseDownX;
 				}
 			}
-			elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width: 2.0; visibility:" + ((false) ? "visible" : "hidden"));
+			elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width: 1.0; visibility:" + ((isVisible) ? "visible" : "hidden"));
 		}
 	}
 	this.graphic.addEventListener('mousemove', dragHandler, false);
