@@ -38,10 +38,10 @@ function ModelRenderer() {
 	this.offset_y_scala = 80.0;
 
 	this.offset_x = 70;
-	this.offset_y = 480;
+	this.offset_y = 680;
 
 	this.factorForce = 0.02;
-	this.factorDisplacement = 0.01;
+	this.factorDisplacement = 1.0;
 
 	this.beta = 0.0;
 	this.gamma = -0.0000001;
@@ -69,7 +69,7 @@ function ModelRenderer() {
 		_that.mouseDownX = null;
 		_that.mouseDownY = null;
 		_that.beta = 0.0;
-		_that.gamma = 0.00001;
+		_that.gamma = 0.0;
 		_that.selecedElementId = null;
 	}
 	this.graphic.addEventListener('mouseup', dragEndHandler, false);
@@ -94,7 +94,7 @@ function ModelRenderer() {
 					_that.gamma = -x2 + _that.mouseDownX;
 				}
 			}
-			elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width: 1.0; visibility:" + ((isVisible) ? "visible" : "hidden"));
+			elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width: 1.0; visibility:" + ((false) ? "visible" : "hidden"));
 		}
 	}
 	this.graphic.addEventListener('mousemove', dragHandler, false);

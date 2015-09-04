@@ -45,7 +45,7 @@ import java.util.Map;
 public class Solver {
 
 	/** Thickness of 2D structure in mm */
-	protected static final double THICKNESS = 10.0f;
+	protected static final double THICKNESS = 8.0f;
 
 	/** Poisson's Ratio of material*/
 	protected static final double POISSION_RATIO = 0.2f;
@@ -84,10 +84,10 @@ public class Solver {
 	protected Node[][] nodes;
 
 	/** Scale factor for all coordinates of input model for x-axis */
-	protected final static double ZOOM_X = 2.3;
+	protected final static double ZOOM_X = 3.3;
 
 	/** Scale factor for all coordinates of input model for y-axis */
-	protected final static double ZOOM_Y = -2.3;
+	protected final static double ZOOM_Y = -3.3;
 
 	/** Area of element, the map is used to calculate the value just once */
 	protected Map<Integer, Double> elementAreas = new HashMap<Integer, Double>();
@@ -97,6 +97,9 @@ public class Solver {
 
 	/** Matrix of differential operators that convert displacements to strains using linear elasticity theory */
 	protected final double[][] D = calculateDifferentialOperatorsMatrix();
+
+	/** Flag that indicates that the model has been solved */
+	protected boolean isSolved = false;
 
 	/**
 	 * Parse model description and create global stiffness matrix
@@ -116,6 +119,7 @@ public class Solver {
 		this.inputForces = forces;
 		this.solutionDisplacements = BandMatrixFull.solve(stiffnessRearanged, inputForces, 500);
 		this.stiffness.times(solutionDisplacements, solutionForces);
+		isSolved = true;
 	}
 
 	/**
@@ -136,13 +140,14 @@ public class Solver {
 			double fy = yForce;
 			double fx = xForce;
 			String currentElementId = "E" + elementId;
-			if (currentElementId.equals(selecedElementId) && !isGravityActive) {
-				fy *= 50;
-				fx *= 50;
-			} 
-			else {
-				fy *= 0.00000001;
-				fx *= 0.00000001;
+			if (!isGravityActive) {
+				if (currentElementId.equals(selecedElementId)) {
+					fy *= 50;
+					fx *= 50;
+				} else {
+					fy = 0.00000001;
+					fx = 0.00000001;
+				}
 			}
 
 			final double area = calculateAreaOfElement(elementId);
@@ -446,19 +451,19 @@ public class Solver {
 	}
 
 	public double getSolutionNodeDisplacementY(final int nodeId) {
-		return solutionDisplacements.getValue(nodeId * 2 - 1);
+		return !isSolved ? 0.0 : solutionDisplacements.getValue(nodeId * 2 - 1);
 	}
 
 	public double getSolutionNodeDisplacementX(final int nodeId) {
-		return solutionDisplacements.getValue(nodeId * 2 - 2);
+		return !isSolved ? 0.0 : solutionDisplacements.getValue(nodeId * 2 - 2);
 	}
 
 	public double getSolutionNodeForceY(final int nodeId) {
-		return solutionForces.getValue(nodeId * 2 - 1);
+		return !isSolved ? 0.0 : solutionForces.getValue(nodeId * 2 - 1);
 	}
 
 	public double getSolutionNodeForceX(final int nodeId) {
-		return solutionForces.getValue(nodeId * 2 - 2);
+		return !isSolved ? 0.0 : solutionForces.getValue(nodeId * 2 - 2);
 	}
 
 	public double getNodeForceY(final int nodeId) {
@@ -518,11 +523,11 @@ public class Solver {
 	}
 
 	public double getDisplacementX(final int elementId, final int cornerId) {
-		return solutionDisplacements.getValue(nodes[elementId][cornerId].nodeID * 2 - 2);
+		return !isSolved ? 0.0 : solutionDisplacements.getValue(nodes[elementId][cornerId].nodeID * 2 - 2);
 	}
 
 	public double getDisplacementY(final int elementId, final int cornerId) {
-		return solutionDisplacements.getValue(nodes[elementId][cornerId].nodeID * 2 - 1);
+		return !isSolved ? 0.0 : solutionDisplacements.getValue(nodes[elementId][cornerId].nodeID * 2 - 1);
 	}
 
 	public double getNodeY(final int elementId, final int cornerId) {
@@ -685,17 +690,17 @@ public class Solver {
 				final double deltaArea = calculateDeltaAreaOfElement(elementId);
 
 				pre.append("\n{\"id\": ").append(nodeId);
-				pre.append(", \"x_force\" : ").append(x_force);
-				pre.append(", \"y_force\" : ").append(y_force);
-				pre.append(", \"x_d\" : ").append(x_d);
-				pre.append(", \"y_d\" : ").append(y_d);
+				pre.append(", \"x_force\" : ").append(x_force == 0.0 ? "0.0" : x_force);
+				pre.append(", \"y_force\" : ").append(y_force == 0.0 ? "0.0" : y_force);
+				pre.append(", \"x_d\" : ").append(x_d == 0.0 ? "0.0" : x_d);
+				pre.append(", \"y_d\" : ").append(y_d == 0.0 ? "0.0" : y_d);
 				pre.append(", \"x_fixed\" : ").append(x_fixed);
 				pre.append(", \"y_fixed\" : ").append(y_fixed);
-				pre.append(", \"x\" : ").append(x);
-				pre.append(", \"y\" : ").append(y);
-				pre.append(", \"deltaX\" : ").append(deltaX);
-				pre.append(", \"deltaY\" : ").append(deltaY);
-				pre.append(", \"deltaArea\" : ").append(deltaArea).append(" }\n");
+				pre.append(", \"x\" : ").append(x == 0.0 ? "0.0" : x);
+				pre.append(", \"y\" : ").append(y == 0.0 ? "0.0" : y);
+				pre.append(", \"deltaX\" : ").append(deltaX == 0.0 ? "0.0" : deltaX);
+				pre.append(", \"deltaY\" : ").append(deltaY == 0.0 ? "0.0" : deltaY);
+				pre.append(", \"deltaArea\" : ").append(deltaArea == 0.0 ? "0.0" : deltaArea).append(" }\n");
 				if (cornerId < 3) {
 					pre.append(',');
 				}

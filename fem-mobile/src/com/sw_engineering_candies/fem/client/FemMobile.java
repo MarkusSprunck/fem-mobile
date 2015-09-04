@@ -57,17 +57,18 @@ public class FemMobile implements EntryPoint {
 	public FemMobile() {
 		final String inputModel = ModelFactory.createEiffelTowerModel();
 		model.createModel(inputModel);
-		final Vector forces = model.caluculateInputForces(beta, gamma, isGravityActive, selecedElementId);
-		model.solve(forces);
-		setModelGlobal(model.getJSON());
+		setModel(model.getJSON());
 	}
 
 	public void updateModel() {
+
 		getValuesFromGui();
-		System.out.println(selecedElementId);
-		final Vector forces = model.caluculateInputForces(beta, gamma, isGravityActive, selecedElementId);
-		model.solve(forces);
-		setModelGlobal(model.getJSON());
+
+		if (Math.abs(beta) > 0.0 || Math.abs(gamma) > 0.0) {
+			final Vector forces = model.caluculateInputForces(beta, gamma, isGravityActive, selecedElementId);
+			model.solve(forces);
+			setModel(model.getJSON());
+		}
 	}
 
 	public static void getValuesFromGui() {
@@ -97,7 +98,7 @@ public class FemMobile implements EntryPoint {
 		$wnd.updateForces = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getValuesFromGui());
 	}-*/;
 
-	public static native void setModelGlobal(String model)
+	public static native void setModel(String model)
 	/*-{
 		$wnd.setModel(model);
 	}-*/;
