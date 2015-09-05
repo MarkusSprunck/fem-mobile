@@ -566,4 +566,104 @@ public class ModelFactory {
 		return result.toString();
 	}
 
+	public static String createEiffelTowerModelBase() {
+		final StringBuilder result = new StringBuilder();
+		result.append("N 1 0 0").append("\n");
+		result.append("N 2 11 0").append("\n");
+		result.append("N 3 8 5").append("\n");
+		result.append("N 4 5 8.5").append("\n");
+		result.append("N 5 15 8.5").append("\n");
+		result.append("N 6 12 12").append("\n");
+		result.append("N 7 8.3 15").append("\n");
+		result.append("N 8 18 15").append("\n");
+		result.append("N 9 15 18").append("\n");
+		result.append("N 10 11.5 20.5").append("\n");
+		result.append("N 11 20.5 20.5").append("\n");
+		result.append("N 12 29 20.5").append("\n");
+		result.append("N 13 37.7 22").append("\n");
+		result.append("N 14 47 20.5").append("\n");
+		result.append("N 15 58 15").append("\n");
+		result.append("N 16 55 20.5").append("\n");
+		result.append("N 17 64.5 20.5").append("\n");
+		result.append("N 18 61.3 18").append("\n");
+		result.append("N 19 67.5 15").append("\n");
+		result.append("N 20 64.5 12").append("\n");
+		result.append("N 21 61.5 8.5").append("\n");
+		result.append("N 22 71 8.5").append("\n");
+		result.append("N 23 68 5").append("\n");
+		result.append("N 24 65 0").append("\n");
+		result.append("N 25 76 0").append("\n");
+		result.append("N 26 18 24").append("\n");
+		result.append("N 27 27 24").append("\n");
+		result.append("N 28 34.5 24").append("\n");
+		result.append("N 29 41.7 24").append("\n");
+		result.append("N 30 49.5 24").append("\n");
+		result.append("N 31 58 24").append("\n");
+		result.append("N 32 15 27.5").append("\n");
+		result.append("N 33 24 27.5").append("\n");
+		result.append("N 34 31 27.5").append("\n");
+		result.append("N 35 37.7 27.5").append("\n");
+		result.append("N 36 45 27.5").append("\n");
+
+		result.append("E 1 1 3 2").append("\n");
+		result.append("E 2 2 3 5").append("\n");
+		result.append("E 3 3 4 5").append("\n");
+		result.append("E 4 1 4 3").append("\n");
+		result.append("E 5 4 6 5").append("\n");
+		result.append("E 6 5 6 8").append("\n");
+		result.append("E 7 6 7 8").append("\n");
+		result.append("E 8 4 7 6").append("\n");
+		result.append("E 9 7 10 9").append("\n");
+		result.append("E 10 7 9 8").append("\n");
+		result.append("E 11 8 9 11").append("\n");
+		result.append("E 12 9 10 11").append("\n");
+
+		result.append("D 1 x 0.0").append("\n");
+		result.append("D 1 y 0.0").append("\n");
+		result.append("D 2 y 0.0").append("\n");
+		result.append("F 13 y 0.01").append("\n");
+		return result.toString();
+	}
+
+	public static String createDefaultModel() {
+		final StringBuffer nodeText = new StringBuffer();
+		final int maxCols = 18;
+		final int maxRows = 6;
+		final int scaleFactorX = 5;
+		final int scaleFactorY = 5;
+		for (int col = 1; col <= maxCols; col++) {
+			for (int row = 1; row <= maxRows; row++) {
+				final int nodeId = row + maxRows * (col - 1);
+				nodeText.append("N ").append(nodeId).append(" ").append(col * scaleFactorX).append(" ").append(row * scaleFactorY).append("\n");
+			}
+		}
+
+		for (int col = 1; col < maxCols; col++) {
+			for (int row = 1; row < maxRows; row++) {
+				final int firstElementId = row * 2 - 1 + (maxRows - 1) * 2 * (col - 1);
+				final int secondElementId = row * 2 + (maxRows - 1) * 2 * (col - 1);
+				final int node1Id = row + maxRows * (col - 1);
+				final int node2Id = row + maxRows * col;
+				final int node3Id = row + 1 + maxRows * (col - 1);
+				final int node4Id = row + 1 + maxRows * (col + 1 - 1);
+				nodeText.append("E ").append(firstElementId).append(" ").append(node1Id).append(" ").append(node2Id).append(" ").append(node3Id).append("\n");
+				nodeText.append("E ").append(secondElementId).append(" ").append(node2Id).append(" ").append(node4Id).append(" ").append(node3Id).append("\n");
+			}
+		}
+
+		nodeText.append("D ").append(1).append(" y ").append(0).append("\n");
+		for (int row = 1; row <= maxRows; row++) {
+			nodeText.append("D ").append(row).append(" x ").append(0).append("\n");
+		}
+
+		for (int col = 1; col <= maxCols; col++) {
+			for (int row = 1; row <= maxRows; row++) {
+				final int nodeId = row + maxRows * (col - 1);
+				nodeText.append("F ").append(nodeId).append(" y ").append(10.0).append("\n");
+			}
+		}
+
+		return nodeText.toString();
+	}
+
 }

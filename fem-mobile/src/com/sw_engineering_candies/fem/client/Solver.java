@@ -45,7 +45,7 @@ import java.util.Map;
 public class Solver {
 
 	/** Thickness of 2D structure in mm */
-	protected static final double THICKNESS = 8.0f;
+	protected static final double THICKNESS = 10.0f;
 
 	/** Poisson's Ratio of material*/
 	protected static final double POISSION_RATIO = 0.2f;
@@ -105,10 +105,15 @@ public class Solver {
 	 * Parse model description and create global stiffness matrix
 	 */
 	public void createModel(final String model) {
+		final double start = System.currentTimeMillis();
+
 		bandWidthExpected = parseModel(model);
 		stiffness = calulateSystemStiffnessMatrix();
 		stiffnessRearanged = rearangeSystemStiffnesMatrix();
 		solutionForces = new Vector(stiffness.getMaxRows());
+
+		final double end = System.currentTimeMillis();
+		System.out.println("stiffness matrix created [" + (end - start) + "ms]");
 	}
 
 	/**
@@ -130,41 +135,32 @@ public class Solver {
 	public Vector caluculateInputForces(final double beta, final double gamma, boolean isGravityActive, String selecedElementId) {
 
 		// Calculate forces based on mobile sensor data
-		final double yForce = 2 * Math.sin(-beta / 180 * Math.PI);
-		final double xForce = 2 * Math.sin(-gamma / 180 * Math.PI);
+		final double yForce = Math.sin(-beta / 180 * Math.PI);
+		final double xForce = Math.sin(-gamma / 180 * Math.PI);
 
 		// Create forces for nodes which are not fixed
 		final Vector forces = new Vector(inputForces.getMaxRows());
 		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
 
-			double fy = yForce;
-			double fx = xForce;
 			String currentElementId = "E" + elementId;
-			if (!isGravityActive) {
-				if (currentElementId.equals(selecedElementId)) {
-					fy *= 50;
-					fx *= 50;
-				} else {
-					fy = 0.00000001;
-					fx = 0.00000001;
+			if (!isGravityActive && currentElementId.equals(selecedElementId) || isGravityActive) {
+
+				final double area = calculateAreaOfElement(elementId);
+				for (int cornerId = 1; cornerId < 4; cornerId++) {
+					final int nodeId = getNodeIdByElementId(elementId, cornerId);
+
+					if (!isNodeFixedInYAxis(nodeId)) {
+						double valueY = forces.getValue(nodeId * 2 - 1);
+						forces.setValue(nodeId * 2 - 1, valueY + yForce * area);
+					}
+
+					if (!isNodeFixedInXAxis(nodeId)) {
+						double valueX = forces.getValue(nodeId * 2 - 2);
+						forces.setValue(nodeId * 2 - 2, valueX + xForce * area);
+					}
 				}
+
 			}
-
-			final double area = calculateAreaOfElement(elementId);
-			for (int cornerId = 1; cornerId < 4; cornerId++) {
-				final int nodeId = getNodeIdByElementId(elementId, cornerId);
-
-				if (!isNodeFixedInYAxis(nodeId)) {
-					double valueY = forces.getValue(nodeId * 2 - 1);
-					forces.setValue(nodeId * 2 - 1, valueY + fy * area);
-				}
-
-				if (!isNodeFixedInXAxis(nodeId)) {
-					double valueX = forces.getValue(nodeId * 2 - 2);
-					forces.setValue(nodeId * 2 - 2, valueX + fx * area);
-				}
-			}
-
 		}
 		return forces;
 	}

@@ -44,7 +44,11 @@ import com.google.gwt.user.client.Timer;
  */
 public class FemMobile implements EntryPoint {
 
+	final static boolean isModel2Active = true;
+
 	final static Solver model = new Solver();
+
+	final static Solver2 model2 = new Solver2();
 
 	static Double beta = 0.0;
 
@@ -55,20 +59,33 @@ public class FemMobile implements EntryPoint {
 	static boolean isGravityActive = true;
 
 	public FemMobile() {
-		final String inputModel = ModelFactory.createEiffelTowerModel();
-		model.createModel(inputModel);
-		setModel(model.getJSON());
+
+		if (isModel2Active) {
+			final String inputModel2 = ModelUtil.createDefaultModel(model2).toString();
+			model2.createModel(inputModel2);
+			String json = ModelUtil.getJSON(model2, beta, gamma);
+			setModel(json);
+		} else {
+			final String inputModel = ModelFactory.createDefaultModel();
+			model.createModel(inputModel);
+			setModel(model.getJSON());
+		}
 	}
 
 	public void updateModel() {
-
 		getValuesFromGui();
 
-		if (Math.abs(beta) > 0.0 || Math.abs(gamma) > 0.0) {
+		final double start = System.currentTimeMillis();
+		if (isModel2Active) {
+			String json = ModelUtil.getJSON(model2, beta, gamma);
+			setModel(json);
+		} else {
 			final Vector forces = model.caluculateInputForces(beta, gamma, isGravityActive, selecedElementId);
 			model.solve(forces);
 			setModel(model.getJSON());
 		}
+		final double end = System.currentTimeMillis();
+		System.out.println("update model ready       [" + (end - start) + "ms]");
 	}
 
 	public static void getValuesFromGui() {
@@ -136,7 +153,7 @@ public class FemMobile implements EntryPoint {
 				updateModel();
 			}
 		};
-		timerGraficUpdate.scheduleRepeating(125);
-
+		timerGraficUpdate.scheduleRepeating(250);
 	}
+
 }

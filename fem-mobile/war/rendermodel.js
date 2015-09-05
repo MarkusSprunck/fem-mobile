@@ -37,15 +37,15 @@ function ModelRenderer() {
 	this.offset_x_scala = 0.0;
 	this.offset_y_scala = 80.0;
 
-	this.offset_x = 70;
-	this.offset_y = 680;
+	this.offset_x = 100;
+	this.offset_y = 280;
 
-	this.factorForce = 0.02;
-	this.factorDisplacement = 1.0;
+	this.factorForce =3.0;
+	this.factorDisplacement = 10000.0;
 
 	this.beta = 0.0;
-	this.gamma = -0.0000001;
-	this.isGravityActive = false;
+	this.gamma = 0.0;
+	this.isGravityActive = true;
 	this.selecedElementId = null;
 
 	this.rotate = false;
@@ -94,7 +94,7 @@ function ModelRenderer() {
 					_that.gamma = -x2 + _that.mouseDownX;
 				}
 			}
-			elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width: 1.0; visibility:" + ((false) ? "visible" : "hidden"));
+			elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width: 1.0; visibility:" + ((isVisible) ? "visible" : "hidden"));
 		}
 	}
 	this.graphic.addEventListener('mousemove', dragHandler, false);
@@ -137,10 +137,10 @@ function ModelRenderer() {
 				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 				text.setAttribute('id', "LT1" + index);
 			}
-			text.setAttribute('x', this.offset_x_scala + this.scala_size_x * 3.5);
+			text.setAttribute('x', this.offset_x_scala + this.scala_size_x * 5.5);
 			text.setAttribute('y', this.offset_y_scala + (index + 0.75) * this.scala_size_y / this.scalaNumber);
 			text.setAttribute('fill', '#FFFFFF');
-			text.textContent = value.toFixed(2);
+			text.textContent = value.toFixed(6);
 			var svg1 = document.getElementById("svgLegend");
 			svg1.appendChild(text);
 		}
@@ -154,7 +154,7 @@ function ModelRenderer() {
 			text.setAttribute('style', 'text-anchor: start;');
 			text.setAttribute('fill', '#FFFFFF');
 			text.setAttribute('x', this.offset_x_scala);
-			text.setAttribute('y', this.offset_y + 60);
+			text.setAttribute('y', this.offset_y + 260);
 			var svg1 = document.getElementById("svgStatusLine");
 			svg1.appendChild(text);
 		}
@@ -236,17 +236,17 @@ function ModelRenderer() {
 		this.minColor = 250.0;
 		this.maxColor = -250.0;
 		for (var ele = elements.length - 1; ele >= 0; ele--) {
-			var deltaArea = elements[ele][0].deltaArea;
-			this.minColor = Math.min(deltaArea / 3.0, this.minColor);
-			this.maxColor = Math.max(deltaArea / 3.0, this.maxColor);
+			var deltaX = elements[ele][0].x_d;
+			this.minColor = Math.min(deltaX / 3.0, this.minColor);
+			this.maxColor = Math.max(deltaX / 3.0, this.maxColor);
 		}
-		this.minColor = Math.min(this.minColor, -0.1);
-		this.maxColor = Math.max(this.maxColor, 0.1);
+//		this.minColor = Math.min(this.minColor, -0.0001);
+//		this.maxColor = Math.max(this.maxColor, 0.0001);
 
 		// render elements
 		for (var ele = elements.length - 1; ele >= 0; ele--) {
 			var pointsSVG = "";
-			var deltaArea = elements[ele][0].deltaArea;
+			var deltaX = elements[ele][0].x_d;
 			for (var nodeId = 0; nodeId < 3; nodeId++) {
 				element = elements[ele][nodeId];
 				var x = this.offset_x + element.x + element.x_d * this.factorDisplacement;
@@ -266,7 +266,7 @@ function ModelRenderer() {
 			var elementSVG = this.getPoygonElementSVG(id, "svgElements");
 			if (null != elementSVG) {
 				elementSVG.setAttribute('points', pointsSVG.trim());
-				elementSVG.setAttribute('style', "fill:" + this.getColor(deltaArea / 3.0) + ";");
+				elementSVG.setAttribute('style', "fill:" + this.getColor(deltaX / 3.0) + ";");
 				elementSVG.addEventListener('mousedown', function(event) {
 					event.preventDefault();
 					_that.mouseDownX = event.clientX;
