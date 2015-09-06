@@ -152,6 +152,7 @@ public final class BandMatrixFull {
 	}
 
 	public static Vector solve(final BandMatrixFull A, final Vector b, final int maxNumberOfIterations) {
+		final double start = System.currentTimeMillis();
 
 		// create local variables
 		int i = -1;
@@ -173,7 +174,7 @@ public final class BandMatrixFull {
 		// rsold = r' * r
 		double rsold = r.dotProduct(r);
 
-		while (i++ < maxNumberOfIterations && rsnew > 1e-21) {
+		while (i++ < maxNumberOfIterations && rsnew > 1e-6) {
 			// Ap = A * p
 			A.times(p, Ap);
 
@@ -199,6 +200,9 @@ public final class BandMatrixFull {
 			rsold = rsnew;
 		}
 
+		final double end = System.currentTimeMillis();
+		System.out.println("conjugate gradient ready [" + (end - start) + "ms, itterations=" + i + "]");
+
 		return x;
 	}
 
@@ -213,9 +217,9 @@ public final class BandMatrixFull {
 	@Override
 	public String toString() {
 		final StringBuilder builder = new StringBuilder();
-		builder.append("BandMatrix [rows=" + rows + ", cols=" + cols + "\n");
-		for (int row = 0; row < rows /* && row < 10 */; row++) {
-			for (int col = 0; col < rows; col++) {
+		builder.append("BandMatrixFull [rows=" + rows + ", cols=" + cols + "\n");
+		for (int col = 0; col < rows; col++) {
+			for (int row = 0; row < rows; row++) {
 				builder.append(Math.round(1000 * getValue(row, col)) / 1000.0).append(" ");
 			}
 			builder.append("\n");

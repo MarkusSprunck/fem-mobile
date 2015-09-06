@@ -44,11 +44,9 @@ import com.google.gwt.user.client.Timer;
  */
 public class FemMobile implements EntryPoint {
 
-	final static boolean isModel2Active = true;
+	final static boolean isModel2Active = false;
 
 	final static Solver model = new Solver();
-
-	final static Solver2 model2 = new Solver2();
 
 	static Double beta = 0.0;
 
@@ -56,34 +54,25 @@ public class FemMobile implements EntryPoint {
 
 	static String selecedElementId = "";
 
-	static boolean isGravityActive = true;
+	static boolean isGravityActive = false;
 
 	public FemMobile() {
+		final String inputModel2 = ModelFactory.createDefaultModel(400, 40, 40, 4, 1).toString();
+		// final String inputModel2 = ModelFactory.createEiffelTowerModel();
 
-		if (isModel2Active) {
-			final String inputModel2 = ModelUtil.createDefaultModel(model2).toString();
-			model2.createModel(inputModel2);
-			String json = ModelUtil.getJSON(model2, beta, gamma);
-			setModel(json);
-		} else {
-			final String inputModel = ModelFactory.createDefaultModel();
-			model.createModel(inputModel);
-			setModel(model.getJSON());
-		}
+		model.createModel(inputModel2);
+		setModel(model.getJSON());
 	}
 
 	public void updateModel() {
+		
 		getValuesFromGui();
 
 		final double start = System.currentTimeMillis();
-		if (isModel2Active) {
-			String json = ModelUtil.getJSON(model2, beta, gamma);
-			setModel(json);
-		} else {
-			final Vector forces = model.caluculateInputForces(beta, gamma, isGravityActive, selecedElementId);
-			model.solve(forces);
-			setModel(model.getJSON());
-		}
+		final Vector forces = model.caluculateInputForces(beta, gamma, isGravityActive, selecedElementId);
+		model.solve(forces);
+		setModel(model.getJSON());
+
 		final double end = System.currentTimeMillis();
 		System.out.println("update model ready       [" + (end - start) + "ms]");
 	}

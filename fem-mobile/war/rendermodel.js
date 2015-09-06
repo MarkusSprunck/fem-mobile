@@ -40,12 +40,12 @@ function ModelRenderer() {
 	this.offset_x = 100;
 	this.offset_y = 280;
 
-	this.factorForce =3.0;
-	this.factorDisplacement = 10000.0;
+	this.factorForce = 0.00005;
+	this.factorDisplacement = 0.02;
 
 	this.beta = 0.0;
 	this.gamma = 0.0;
-	this.isGravityActive = true;
+	this.isGravityActive = false;
 	this.selecedElementId = null;
 
 	this.rotate = false;
@@ -94,7 +94,7 @@ function ModelRenderer() {
 					_that.gamma = -x2 + _that.mouseDownX;
 				}
 			}
-			elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width: 1.0; visibility:" + ((isVisible) ? "visible" : "hidden"));
+			elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width: 1.0; visibility:" + ((false) ? "visible" : "hidden"));
 		}
 	}
 	this.graphic.addEventListener('mousemove', dragHandler, false);
@@ -137,10 +137,10 @@ function ModelRenderer() {
 				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 				text.setAttribute('id', "LT1" + index);
 			}
-			text.setAttribute('x', this.offset_x_scala + this.scala_size_x * 5.5);
+			text.setAttribute('x', this.offset_x_scala + this.scala_size_x * 4.0);
 			text.setAttribute('y', this.offset_y_scala + (index + 0.75) * this.scala_size_y / this.scalaNumber);
 			text.setAttribute('fill', '#FFFFFF');
-			text.textContent = value.toFixed(6);
+			text.textContent = value.toFixed(3);
 			var svg1 = document.getElementById("svgLegend");
 			svg1.appendChild(text);
 		}
@@ -204,7 +204,7 @@ function ModelRenderer() {
 	}
 
 	ModelRenderer.prototype.drawFixedVerticalSVG = function(x, y, nodeId) {
-		var length = 8;
+		var length = 10;
 		var pointsSVG = "";
 		pointsSVG += [ x, y ].join(',') + ' ';
 		pointsSVG += [ x - length, y - length * 0.75 ].join(',') + ' ';
@@ -217,7 +217,7 @@ function ModelRenderer() {
 	}
 
 	ModelRenderer.prototype.drawFixedHorizontalSVG = function(x, y, nodeId) {
-		var length = 8;
+		var length = 10;
 		var pointsSVG = "";
 		pointsSVG += [ x, y ].join(',') + ' ';
 		pointsSVG += [ x + length * 0.75, y + length ].join(',') + ' ';
@@ -236,17 +236,17 @@ function ModelRenderer() {
 		this.minColor = 250.0;
 		this.maxColor = -250.0;
 		for (var ele = elements.length - 1; ele >= 0; ele--) {
-			var deltaX = elements[ele][0].x_d;
-			this.minColor = Math.min(deltaX / 3.0, this.minColor);
-			this.maxColor = Math.max(deltaX / 3.0, this.maxColor);
+			var deltaX = elements[ele][0].deltaArea;
+			this.minColor = Math.min(deltaX, this.minColor);
+			this.maxColor = Math.max(deltaX, this.maxColor);
 		}
-//		this.minColor = Math.min(this.minColor, -0.0001);
-//		this.maxColor = Math.max(this.maxColor, 0.0001);
+		this.minColor = Math.min(this.minColor, -0.01);
+		this.maxColor = Math.max(this.maxColor, 0.01);
 
 		// render elements
 		for (var ele = elements.length - 1; ele >= 0; ele--) {
 			var pointsSVG = "";
-			var deltaX = elements[ele][0].x_d;
+			var deltaX = elements[ele][0].deltaArea;
 			for (var nodeId = 0; nodeId < 3; nodeId++) {
 				element = elements[ele][nodeId];
 				var x = this.offset_x + element.x + element.x_d * this.factorDisplacement;
@@ -254,12 +254,16 @@ function ModelRenderer() {
 				pointsSVG += [ x, y ].join(',') + ' ';
 				if (element.x_fixed) {
 					this.drawFixedVerticalSVG(x, y, element.id);
-					this.drawVector(x, y, x + element.x_force * this.factorForce, y, true, (element.x_force > 0.0), element.id);
 				}
 				if (element.y_fixed) {
 					this.drawFixedHorizontalSVG(x, y, element.id);
-					this.drawVector(x, y, x, y + element.y_force * this.factorForce, false, (element.y_force > 0.0), element.id);
 				}
+
+				var isSelectedElement = !this.isGravityActive && ('E' + ele) == this.selecedElementId;
+				this.drawVector(x, y, x + element.x_force * this.factorForce, y, true, (element.x_force > 0.0), element.id, isSelectedElement
+						|| element.x_fixed);
+				this.drawVector(x, y, x, y + element.y_force * this.factorForce, false, (element.y_force > 0.0), element.id, isSelectedElement
+						|| element.y_fixed);
 			}
 			var _that = this;
 			var id = 'E' + (ele + 1);
@@ -287,10 +291,10 @@ function ModelRenderer() {
 		}
 	}
 
-	ModelRenderer.prototype.drawVector = function(startX, startY, endX, endY, horizontal, positive, ele) {
+	ModelRenderer.prototype.drawVector = function(startX, startY, endX, endY, horizontal, positive, ele, isSelectedElement) {
 
 		var length = 3;
-		var isVisible = Math.abs(startX - endX) + Math.abs(startY - endY) > length;
+		var isVisible = isSelectedElement || (Math.abs(startX - endX) + Math.abs(startY - endY) > length);
 
 		var pointsSVG = "";
 		if (isVisible) {

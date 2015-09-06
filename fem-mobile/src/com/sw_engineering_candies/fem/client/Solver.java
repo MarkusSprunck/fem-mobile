@@ -44,14 +44,16 @@ import java.util.Map;
 
 public class Solver {
 
+	private static final double ZOOM_FACTOR = 2.5;
+
 	/** Thickness of 2D structure in mm */
-	protected static final double THICKNESS = 10.0f;
+	protected static double thickness = 10.0f;
 
 	/** Poisson's Ratio of material*/
-	protected static final double POISSION_RATIO = 0.2f;
+	protected static double poissonRatio = 0.2f;
 
 	/** Young's Modulus of material in N/mm^2*/
-	protected static final double YOUNGS_MODULUS = 1.6E+05f;
+	protected static double youngsModulus = 1.6E+05f;
 
 	/** Stiffness matrix of all elements */
 	protected BandMatrixFull stiffness;
@@ -71,6 +73,9 @@ public class Solver {
 	/** Resulting displacements in mm after solving */
 	protected Vector solutionDisplacements;
 
+	/**Average displacement of all nodes of a element in mm */
+	private double[] solutionsDisplacementsMeanY;
+
 	/** Expected band with for global stiffness matrix resulting form the max node number distance in one element */
 	protected int bandWidthExpected = 0;
 
@@ -83,20 +88,11 @@ public class Solver {
 	/** Stores the node information for each element in the model */
 	protected Node[][] nodes;
 
-	/** Scale factor for all coordinates of input model for x-axis */
-	protected final static double ZOOM_X = 3.3;
-
-	/** Scale factor for all coordinates of input model for y-axis */
-	protected final static double ZOOM_Y = -3.3;
-
 	/** Area of element, the map is used to calculate the value just once */
 	protected Map<Integer, Double> elementAreas = new HashMap<Integer, Double>();
 
 	/** Delta area of element, the map is used to calculate the value just once */
 	protected Map<Integer, Double> elementDeltaAreas = new HashMap<Integer, Double>();
-
-	/** Matrix of differential operators that convert displacements to strains using linear elasticity theory */
-	protected final double[][] D = calculateDifferentialOperatorsMatrix();
 
 	/** Flag that indicates that the model has been solved */
 	protected boolean isSolved = false;
@@ -117,32 +113,44 @@ public class Solver {
 	}
 
 	/**
-	 * Calculate displacements with rearranged stiffness matrix and 
+	 * Calculate displacements with rearranged stiffness matrix and
 	 * resulting forces with original global stiffness matrix
 	 */
 	public void solve(final Vector forces) {
-		this.inputForces = forces;
-		this.solutionDisplacements = BandMatrixFull.solve(stiffnessRearanged, inputForces, 500);
+
+		if (null != forces) {
+			this.inputForces = forces;
+		}
+
+		this.solutionDisplacements = BandMatrixFull.solve(stiffnessRearanged, inputForces, 600);
+
+		solutionsDisplacementsMeanY = new double[numberOfElements];
+		calculateSolutionsDisplacementsMeanY();
+
 		this.stiffness.times(solutionDisplacements, solutionForces);
 		isSolved = true;
 	}
 
 	/**
-	 * Simulate gravity based on the sensor data of the mobile device 
-	 * @param selecedElementId 
-	 * @param isGravityActive 
+	 * Simulate gravity based on the sensor data of the mobile device
+	 * @param selecedElementId
+	 * @param isGravityActive
 	 */
-	public Vector caluculateInputForces(final double beta, final double gamma, boolean isGravityActive, String selecedElementId) {
+	public Vector caluculateInputForces(final double beta, final double gamma, final boolean isGravityActive, final String selecedElementId) {
+
+		Vector forces = null;
+		int maxRows = inputForces.getMaxRows();
 
 		// Calculate forces based on mobile sensor data
-		final double yForce = Math.sin(-beta / 180 * Math.PI);
-		final double xForce = Math.sin(-gamma / 180 * Math.PI);
+		final double factor = isGravityActive ? 1000.0 / maxRows : 2000.0;
+		final double yForce = factor * Math.sin(-beta / 180 * Math.PI);
+		final double xForce = factor * Math.sin(-gamma / 180 * Math.PI);
 
 		// Create forces for nodes which are not fixed
-		final Vector forces = new Vector(inputForces.getMaxRows());
+		forces = new Vector(maxRows);
 		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
 
-			String currentElementId = "E" + elementId;
+			final String currentElementId = "E" + elementId;
 			if (!isGravityActive && currentElementId.equals(selecedElementId) || isGravityActive) {
 
 				final double area = calculateAreaOfElement(elementId);
@@ -150,41 +158,44 @@ public class Solver {
 					final int nodeId = getNodeIdByElementId(elementId, cornerId);
 
 					if (!isNodeFixedInYAxis(nodeId)) {
-						double valueY = forces.getValue(nodeId * 2 - 1);
+						final double valueY = forces.getValue(nodeId * 2 - 1);
 						forces.setValue(nodeId * 2 - 1, valueY + yForce * area);
 					}
 
 					if (!isNodeFixedInXAxis(nodeId)) {
-						double valueX = forces.getValue(nodeId * 2 - 2);
+						final double valueX = forces.getValue(nodeId * 2 - 2);
 						forces.setValue(nodeId * 2 - 2, valueX + xForce * area);
 					}
 				}
-
 			}
 		}
 		return forces;
 	}
 
+	private void calculateSolutionsDisplacementsMeanY() {
+		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
+			final double delta1 = getSolutionNodeDisplacementY(nodes[elementId][1].nodeID);
+			final double delta2 = getSolutionNodeDisplacementY(nodes[elementId][2].nodeID);
+			final double delta3 = getSolutionNodeDisplacementY(nodes[elementId][3].nodeID);
+			solutionsDisplacementsMeanY[elementId - 1] = (delta3 + delta2 + delta1) / 3.0;
+		}
+	}
+
 	/**
-	 * Just calculates the area of a triangle element 
+	 * Just calculates the area of a triangle element
 	 */
 	Double calculateAreaOfElement(final Integer elementId) {
 		// Store values to avid repeated calculations
 		if (!elementAreas.containsKey(elementId)) {
-			final double Ax = nodes[elementId][1].x;
-			final double Ay = nodes[elementId][1].y;
-			final double Bx = nodes[elementId][2].x;
-			final double By = nodes[elementId][2].y;
-			final double Cx = nodes[elementId][3].x;
-			final double Cy = nodes[elementId][3].y;
-			final double value = Math.abs(((Cx - Bx) * (Ay - By) - (Bx - Ax) * (By - Cy))) / 2.0;
+			final double value = 0.5 * ((-nodes[elementId][2].x + nodes[elementId][3].x) * (nodes[elementId][1].y - nodes[elementId][2].y) - (-nodes[elementId][1].x + nodes[elementId][2].x)
+					* (nodes[elementId][2].y - nodes[elementId][3].y));
 			elementAreas.put(elementId, value);
 		}
 		return elementAreas.get(elementId);
 	}
 
 	/**
-	 * Just calculates the delta area of a triangle element 
+	 * Just calculates the delta area of a triangle element
 	 */
 	Double calculateDeltaAreaOfElement(final Integer elementId) {
 		final double Ax = nodes[elementId][1].x + getDisplacementX(elementId, 1);
@@ -193,8 +204,8 @@ public class Solver {
 		final double By = nodes[elementId][2].y + getDisplacementY(elementId, 2);
 		final double Cx = nodes[elementId][3].x + getDisplacementX(elementId, 3);
 		final double Cy = nodes[elementId][3].y + getDisplacementY(elementId, 3);
-		double value = Math.abs(((Cx - Bx) * (Ay - By) - (Bx - Ax) * (By - Cy))) / 2.0 / calculateAreaOfElement(elementId) - 1.0;
-		return value * 1000;
+		final double value = ((Cx - Bx) * (Ay - By) - (Bx - Ax) * (By - Cy)) / 2.0 / calculateAreaOfElement(elementId) - 1.0;
+		return value;
 	}
 
 	private double[][] calculateStrainDisplacementMatrix(final int elementId, final double area) {
@@ -241,7 +252,7 @@ public class Solver {
 	 */
 	private double[][] calculateElementStiffnessMatrix(final double[][] D, final double[][] B, final int k, final double area) {
 
-		final double volume = area * THICKNESS;
+		final double volume = area * thickness;
 		final double[][] h = new double[4][7];
 		h[1][1] = volume * (B[1][1] * D[1][1] + B[1][2] * D[2][1] + B[1][3] * D[3][1]);
 		h[2][1] = volume * (B[1][1] * D[1][2] + B[1][2] * D[2][2] + B[1][3] * D[3][2]);
@@ -308,64 +319,64 @@ public class Solver {
 	 */
 	private BandMatrixFull calulateSystemStiffnessMatrix() {
 
-		final BandMatrixFull K = new BandMatrixFull(numberOfNodes * 2, bandWidthExpected);
+		/** Matrix of differential operators that convert displacements to strains using linear elasticity theory */
+		final double[][] D = calculateDifferentialOperatorsMatrix();
 
+		final double[][] KB = new double[numberOfNodes * 2][bandWidthExpected];
+
+		int bandWidthActual = 0;
 		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
 
 			final double area = calculateAreaOfElement(elementId);
-
 			final double[][] B = calculateStrainDisplacementMatrix(elementId, area);
+			final double[][] K_e_ = calculateElementStiffnessMatrix(D, B, elementId, area);
 
-			final double[][] Ke = calculateElementStiffnessMatrix(D, B, elementId, area);
-
-			// Add element stiffness matrix (Ke) to system stiffness matrix (K)
 			for (int i = 1; i <= 3; i++) {
 				for (int j = 1; j <= 3; j++) {
+					final int Spalte = nodes[elementId][i].nodeID * 2;
+					final int Reihe = nodes[elementId][j].nodeID * 2;
 
-					final int col = nodes[elementId][i].nodeID * 2;
-					final int row = nodes[elementId][j].nodeID * 2;
-
-					final boolean isUpperPartOfMatrix = col - row > -1;
-					if (isUpperPartOfMatrix) {
-						final int r = row - 2;
-						final int c = col - row;
-
-						final double topLeft = K.getValue(r, c + r);
-						K.setValue(r, c + r, topLeft + Ke[i * 2 - 1][j * 2 - 1]);
-
-						final double topRight = K.getValue(r, c + r + 1);
-						K.setValue(r, c + r + 1, topRight + Ke[i * 2][j * 2 - 1]);
-
-						final double bottomRight = K.getValue(r + 1, c + r + 1);
-						K.setValue(r + 1, c + r + 1, bottomRight + Ke[i * 2][j * 2]);
+					final int NeueSpalte = Spalte - Reihe;
+					if (bandWidthActual < Spalte - Reihe + 1) {
+						bandWidthActual = Spalte - Reihe + 1;
 					}
 
-					final boolean isAboveDiagonal = col - row > 0;
-					if (isAboveDiagonal) {
-						final int r = row - 2;
-						final int c = col - row;
+					if (NeueSpalte > -1) {
+						KB[Reihe - 2][NeueSpalte] = KB[Reihe - 2][NeueSpalte] + K_e_[i * 2 - 1][j * 2 - 1];
+						KB[Reihe - 2][NeueSpalte + 1] = KB[Reihe - 2][NeueSpalte + 1] + K_e_[i * 2][j * 2 - 1];
+						KB[Reihe - 1][NeueSpalte] = KB[Reihe - 1][NeueSpalte] + K_e_[i * 2][j * 2];
 
-						final double bottomLeft = K.getValue(r + 1, c + r);
-						K.setValue(r + 1, c + r, bottomLeft + Ke[i * 2 - 1][j * 2]);
+						if (NeueSpalte > 0) {
+							KB[Reihe - 1][NeueSpalte - 1] = KB[Reihe - 1][NeueSpalte - 1] + K_e_[i * 2 - 1][j * 2];
+						}
 					}
 				}
 			}
 		}
+
+		final BandMatrixFull K = new BandMatrixFull(numberOfNodes * 2, bandWidthExpected * 2 + 1);
+		for (int row = 0; row < numberOfNodes * 2; row++) {
+			for (int col = 0; col <= bandWidthActual; col++) {
+				double value = KB[row][col];
+				K.setValue(row, row + col, value);
+			}
+		}
+
 		return K;
 	}
 
 	private double[][] calculateDifferentialOperatorsMatrix() {
 		final double[][] D = new double[4][4];
-		final double factor = YOUNGS_MODULUS / (1 + POISSION_RATIO) / (1 - 2 * POISSION_RATIO);
-		D[1][1] = (1 - POISSION_RATIO) * factor;
-		D[2][1] = POISSION_RATIO * factor;
+		final double factor = youngsModulus / (1 + poissonRatio) / (1 - 2 * poissonRatio);
+		D[1][1] = (1 - poissonRatio) * factor;
+		D[2][1] = poissonRatio * factor;
 		D[3][1] = 0;
-		D[1][2] = POISSION_RATIO * factor;
-		D[2][2] = (1 - POISSION_RATIO) * factor;
+		D[1][2] = poissonRatio * factor;
+		D[2][2] = (1 - poissonRatio) * factor;
 		D[3][2] = 0;
 		D[1][3] = 0;
 		D[2][3] = 0;
-		D[3][3] = (1 - 2 * POISSION_RATIO) / 2 * factor;
+		D[3][3] = (1 - 2 * poissonRatio) / 2 * factor;
 		return D;
 	}
 
@@ -374,26 +385,6 @@ public class Solver {
 		final BandMatrixFull result = new BandMatrixFull(stiffness);
 
 		for (int nodeId = 1; nodeId <= numberOfNodes; nodeId++) {
-
-			if (isNodeFixedInYAxis(nodeId)) {
-				final int REI = nodeId * 2;
-				for (int i = 1; i <= numberOfNodes; i++) {
-					final int reihe = i * 2;
-					if (REI > reihe) {
-						setNodeForceX(i, getNodeForceX(i) - getNodeDisplacementX(nodeId) * result.getValue(reihe - 1, REI - 1));
-						setNodeForceY(i, getNodeForceY(i) - getNodeDisplacementY(nodeId) * result.getValue(reihe, REI - 1));
-						result.setValue(reihe - 1, REI - 1, 0.0);
-						result.setValue(reihe, REI - 1, 0.0);
-					} else if (reihe - REI + 1 <= this.bandWidthExpected) {
-						setNodeForceX(i, getNodeForceX(i) - getNodeDisplacementX(nodeId) * result.getValue(REI - 1, reihe));
-						setNodeForceY(i, getNodeForceY(i) - getNodeDisplacementY(nodeId) * result.getValue(REI - 1, reihe + 1));
-						result.setValue(REI - 1, reihe, 0.0);
-						result.setValue(REI - 1, reihe + 1, 0.0);
-					}
-				}
-				setNodeForceY(nodeId, getNodeDisplacementY(nodeId));
-				result.setValue(REI - 1, REI - 1, 1.0);
-			}
 
 			if (isNodeFixedInXAxis(nodeId)) {
 				final int REI = nodeId * 2 - 1;
@@ -411,9 +402,30 @@ public class Solver {
 						result.setValue(REI - 1, reihe + 1, 0.0);
 					}
 				}
-				setNodeForceX(nodeId, getNodeDisplacementX(nodeId));
+				setNodeForceX(nodeId, getNodeForceX(nodeId) + getNodeDisplacementX(nodeId));
 				result.setValue(REI - 1, REI - 1, 1.0);
 			}
+
+			if (isNodeFixedInYAxis(nodeId)) {
+				final int REI = nodeId * 2;
+				for (int i = 1; i <= numberOfNodes; i++) {
+					final int reihe = i * 2;
+					if (REI > reihe) {
+						setNodeForceX(i, getNodeForceX(i) - getNodeDisplacementX(nodeId) * result.getValue(reihe - 1, REI - 1));
+						setNodeForceY(i, getNodeForceY(i) - getNodeDisplacementY(nodeId) * result.getValue(reihe, REI - 1));
+						result.setValue(reihe - 1, REI - 1, 0.0);
+						result.setValue(reihe, REI - 1, 0.0);
+					} else if (reihe - REI + 1 <= this.bandWidthExpected) {
+						setNodeForceX(i, getNodeForceX(i) - getNodeDisplacementX(nodeId) * result.getValue(REI - 1, reihe));
+						setNodeForceY(i, getNodeForceY(i) - getNodeDisplacementY(nodeId) * result.getValue(REI - 1, reihe + 1));
+						result.setValue(REI - 1, reihe, 0.0);
+						result.setValue(REI - 1, reihe + 1, 0.0);
+					}
+				}
+				setNodeForceY(nodeId, getNodeForceY(nodeId) + getNodeDisplacementY(nodeId));
+				result.setValue(REI - 1, REI - 1, 1.0);
+			}
+
 		}
 
 		// Now all forces are known and will be reseted to zero
@@ -432,6 +444,10 @@ public class Solver {
 
 	public int getNumberOfElements() {
 		return numberOfElements;
+	}
+
+	public double getSolutionsDisplacementsMeanY(final int elementId) {
+		return solutionsDisplacementsMeanY[elementId - 1];
 	}
 
 	public Vector getInputForces() {
@@ -555,8 +571,8 @@ public class Solver {
 						temporaryNodes.add(new Node());
 					}
 
-					final Double first = Double.valueOf(args[2].trim()) * ZOOM_X;
-					final Double second = Double.valueOf(args[3].trim()) * ZOOM_Y;
+					final Double first = Double.valueOf(args[2].trim());
+					final Double second = Double.valueOf(args[3].trim());
 
 					temporaryNodes.get(number).x = first;
 					temporaryNodes.get(number).y = second;
@@ -604,7 +620,7 @@ public class Solver {
 					if (null == this.inputForces) {
 						this.inputForces = new Vector(numberOfNodes * 2);
 						for (int index = 0; index < this.numberOfNodes * 2; index++) {
-							this.inputForces.setValue(index, Double.NaN);
+							this.inputForces.setValue(index, 0.0); // Double.NaN);
 						}
 					}
 
@@ -641,6 +657,8 @@ public class Solver {
 			this.setNodeIdByElementIdnodeID(temporaryElements.get(i)[1], 3, temporaryElements.get(i)[4]);
 		}
 
+		System.out.println("default model created    [nodes=" + getNumberOfNodes() + ", elements=" + getNumberOfElements() + ", bandwidth=" + bandWidth + "]");
+
 		return bandWidth;
 	}
 
@@ -663,6 +681,8 @@ public class Solver {
 
 	public String getJSON() {
 
+		final double start = System.currentTimeMillis();
+
 		final int numberOfElements = getNumberOfElements();
 
 		final Vector deltaVector = calculateSolutionsDisplacementsMean();
@@ -681,22 +701,18 @@ public class Solver {
 				final boolean y_fixed = isNodeFixedInYAxis(nodeId);
 				final double x = getNodeX(elementId, cornerId);
 				final double y = getNodeY(elementId, cornerId);
-				final double deltaX = deltaVector.getValue(2 * elementId - 2);
-				final double deltaY = deltaVector.getValue(2 * elementId - 1);
 				final double deltaArea = calculateDeltaAreaOfElement(elementId);
 
 				pre.append("\n{\"id\": ").append(nodeId);
-				pre.append(", \"x_force\" : ").append(x_force == 0.0 ? "0.0" : x_force);
-				pre.append(", \"y_force\" : ").append(y_force == 0.0 ? "0.0" : y_force);
-				pre.append(", \"x_d\" : ").append(x_d == 0.0 ? "0.0" : x_d);
-				pre.append(", \"y_d\" : ").append(y_d == 0.0 ? "0.0" : y_d);
+				pre.append(", \"x_force\" : ").append(Double.isNaN(x_force) ? 0.0 : x_force * ZOOM_FACTOR);
+				pre.append(", \"y_force\" : ").append(Double.isNaN(y_force) ? 0.0 : y_force * ZOOM_FACTOR);
+				pre.append(", \"x_d\" : ").append(Double.isNaN(x_d) ? 0.0 : x_d * ZOOM_FACTOR);
+				pre.append(", \"y_d\" : ").append(Double.isNaN(y_d) ? 0.0 : y_d * ZOOM_FACTOR);
 				pre.append(", \"x_fixed\" : ").append(x_fixed);
 				pre.append(", \"y_fixed\" : ").append(y_fixed);
-				pre.append(", \"x\" : ").append(x == 0.0 ? "0.0" : x);
-				pre.append(", \"y\" : ").append(y == 0.0 ? "0.0" : y);
-				pre.append(", \"deltaX\" : ").append(deltaX == 0.0 ? "0.0" : deltaX);
-				pre.append(", \"deltaY\" : ").append(deltaY == 0.0 ? "0.0" : deltaY);
-				pre.append(", \"deltaArea\" : ").append(deltaArea == 0.0 ? "0.0" : deltaArea).append(" }\n");
+				pre.append(", \"x\" : ").append(Double.isNaN(x) ? 0.0 : x * ZOOM_FACTOR);
+				pre.append(", \"y\" : ").append(Double.isNaN(y) ? 0.0 : -y * ZOOM_FACTOR);
+				pre.append(", \"deltaArea\" : ").append(Double.isNaN(deltaArea) ? 0.000001 * Math.random() : deltaArea).append(" }\n");
 				if (cornerId < 3) {
 					pre.append(',');
 				}
@@ -709,7 +725,34 @@ public class Solver {
 		}
 		pre.append("]");
 
+		final double end = System.currentTimeMillis();
+		System.out.println("json created             [" + (end - start) + "ms]");
+
 		return pre.toString();
+	}
+
+	public double getThickness() {
+		return thickness;
+	}
+
+	public void setThickness(final double thickness) {
+		Solver.thickness = thickness;
+	}
+
+	public double getPoissonRatio() {
+		return poissonRatio;
+	}
+
+	public void setPoissonRatio(final double poissonRatio) {
+		Solver.poissonRatio = poissonRatio;
+	}
+
+	public double getYoungsModulus() {
+		return youngsModulus;
+	}
+
+	public void setYoungsModulus(final double youngsModulus) {
+		Solver.youngsModulus = youngsModulus;
 	}
 
 }

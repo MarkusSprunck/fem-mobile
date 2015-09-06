@@ -67,7 +67,7 @@ public class Vector {
 		}
 	}
 
-	// return C = A o B 
+	// return C = A o B
 	public double dotProduct(final Vector B) {
 		double C = 0.0f;
 		for (int i = 0; i < values.length; i++) {
@@ -105,7 +105,7 @@ public class Vector {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder("v3.Vector [");
+		final StringBuilder sb = new StringBuilder("Vector       [");
 		for (final double value : values) {
 			sb.append(value).append("  ");
 		}

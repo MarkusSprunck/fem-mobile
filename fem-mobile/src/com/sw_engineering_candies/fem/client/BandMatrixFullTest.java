@@ -340,7 +340,7 @@ public class BandMatrixFullTest {
 		final String result = A.toString();
 
 		// ASSERT
-		final String expected = "BandMatrix [rows=5, cols=5\n" //
+		final String expected = "BandMatrixFull [rows=5, cols=5\n" //
 				+ "10.0 11.0 12.0 0.0 0.0 \n" //
 				+ "11.0 13.0 14.0 15.0 0.0 \n" //
 				+ "12.0 14.0 16.0 17.0 18.0 \n" //
@@ -492,7 +492,7 @@ public class BandMatrixFullTest {
 		for (int i = 0; i < forcesCalculated.getMaxRows(); i++) {
 			final double valueExpected = inputForces.getValue(i);
 			if (valueExpected > 0.0 || valueExpected < 0.0) {
-				Assert.assertEquals(1.0, forcesCalculated.getValue(i) / valueExpected, 1E-9);
+				Assert.assertEquals(1.0, forcesCalculated.getValue(i) / valueExpected, 1E-4);
 			}
 		}
 	}
