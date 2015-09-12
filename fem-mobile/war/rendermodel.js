@@ -46,7 +46,7 @@ function ModelRenderer() {
 	this.beta = 0.0;
 	this.gamma = 0.0;
 	this.isGravityActive = false;
-	this.selecedElementId = null;
+	this.selecedElementId = "";
 
 	this.rotate = false;
 	this.display_scale = true;
@@ -85,16 +85,18 @@ function ModelRenderer() {
 				var pointsSVG = "";
 				var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
 				var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
-				pointsSVG += [ _that.mouseDownX, _that.mouseDownY ].join(',') + ' ';
-				pointsSVG += [ x2, y2 ].join(',') + ' ';
-				elementSVG.setAttribute('points', pointsSVG.trim());
+				// pointsSVG += [ _that.mouseDownX, _that.mouseDownY ].join(',')
+				// + ' ';
+				// pointsSVG += [ x2, y2 ].join(',') + ' ';
+				// elementSVG.setAttribute('points', pointsSVG.trim());
 
 				if (!_that.isGravityActive) {
 					_that.beta = -y2 + _that.mouseDownY;
 					_that.gamma = -x2 + _that.mouseDownX;
 				}
 			}
-			elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width: 1.0; visibility:" + ((false) ? "visible" : "hidden"));
+			// elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width:
+			// 1.0; visibility:" + ((false) ? "visible" : "hidden"));
 		}
 	}
 	this.graphic.addEventListener('mousemove', dragHandler, false);
@@ -240,8 +242,8 @@ function ModelRenderer() {
 			this.minColor = Math.min(deltaX, this.minColor);
 			this.maxColor = Math.max(deltaX, this.maxColor);
 		}
-		this.minColor = Math.min(this.minColor, -0.01);
-		this.maxColor = Math.max(this.maxColor, 0.01);
+		this.minColor = Math.min(this.minColor, -0.001);
+		this.maxColor = Math.max(this.maxColor, 0.001);
 
 		// render elements
 		for (var ele = elements.length - 1; ele >= 0; ele--) {
@@ -259,14 +261,17 @@ function ModelRenderer() {
 					this.drawFixedHorizontalSVG(x, y, element.id);
 				}
 
-				var isSelectedElement = !this.isGravityActive && ('E' + ele) == this.selecedElementId;
-				this.drawVector(x, y, x + element.x_force * this.factorForce, y, true, (element.x_force > 0.0), element.id, isSelectedElement
-						|| element.x_fixed);
-				this.drawVector(x, y, x, y + element.y_force * this.factorForce, false, (element.y_force > 0.0), element.id, isSelectedElement
-						|| element.y_fixed);
+				var isSelectedElement = !this.isGravityActive && ('E' + (element.idElement)) == this.selecedElementId;
+				if (isSelectedElement) {
+					console.log(this.selecedElementId + " nodeId=" + element.id + " fx=" + element.x_force + " fy=" + element.y_force);
+				}
+				this.drawVector(x, y, x + element.x_force * this.factorForce, y, true, (element.x_force > 0.0), element.id, isSelectedElement,
+						element.x_fixed);
+				this.drawVector(x, y, x, y + element.y_force * this.factorForce, false, (element.y_force > 0.0), element.id, isSelectedElement,
+						element.y_fixed);
 			}
 			var _that = this;
-			var id = 'E' + (ele + 1);
+			var id = 'E' + element.idElement;
 			var elementSVG = this.getPoygonElementSVG(id, "svgElements");
 			if (null != elementSVG) {
 				elementSVG.setAttribute('points', pointsSVG.trim());
@@ -291,10 +296,10 @@ function ModelRenderer() {
 		}
 	}
 
-	ModelRenderer.prototype.drawVector = function(startX, startY, endX, endY, horizontal, positive, ele, isSelectedElement) {
+	ModelRenderer.prototype.drawVector = function(startX, startY, endX, endY, horizontal, positive, ele, isSelectedElement, isFixedNode) {
 
-		var length = 3;
-		var isVisible = isSelectedElement || (Math.abs(startX - endX) + Math.abs(startY - endY) > length);
+		var length = 5;
+		var isVisible = (isFixedNode && (Math.abs(startX - endX) + Math.abs(startY - endY) > length)) || isSelectedElement;
 
 		var pointsSVG = "";
 		if (isVisible) {
@@ -323,7 +328,7 @@ function ModelRenderer() {
 				pointsSVG += [ endX, endY ].join(',') + ' ';
 			}
 		}
-		var elementSVG = this.getPoygonElementSVG('Arrow_' + horizontal + (ele + 1), "svgArrows");
+		var elementSVG = this.getPoygonElementSVG('Arrow_' + horizontal + ele, "svgArrows");
 		if (null != elementSVG) {
 			elementSVG.setAttribute('points', pointsSVG.trim());
 			elementSVG.setAttribute('style', "stroke:#FF0000;stroke-width: 1.0; visibility:" + ((isVisible) ? "visible" : "hidden"));
