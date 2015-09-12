@@ -133,16 +133,16 @@ public class Solver {
 
 	/**
 	 * Simulate gravity based on the sensor data of the mobile device
-	 * @param selecedElementId
+	 * @param selecedNodeId
 	 * @param isGravityActive
 	 */
-	public Vector caluculateInputForces(final double beta, final double gamma, final boolean isGravityActive, final String selecedElementId) {
+	public Vector caluculateInputForces(final double beta, final double gamma, final boolean isGravityActive, final String selecedNodeId) {
 
 		Vector forces = null;
 		int maxRows = inputForces.getMaxRows();
 
 		// Calculate forces based on mobile sensor data
-		final double factor = isGravityActive ? 1000.0 / maxRows : 5000.0;
+		final double factor = isGravityActive ? 3000.0 / maxRows : 10000.0;
 		final double yForce = factor * Math.sin(-beta / 180 * Math.PI);
 		final double xForce = factor * Math.sin(-gamma / 180 * Math.PI);
 
@@ -150,17 +150,14 @@ public class Solver {
 		forces = new Vector(maxRows);
 		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
 
-			final String currentElementId = "E" + (elementId);
-			if (!isGravityActive && currentElementId.equals(selecedElementId) || isGravityActive) {
+			final double area = calculateAreaOfElement(elementId);
+			for (int cornerId = 1; cornerId < 4; cornerId++) {
 
-				final double area = calculateAreaOfElement(elementId);
-				for (int cornerId = 1; cornerId < 4; cornerId++) {
-					
-					int nodeId = getNodeIdByElementId(elementId, cornerId);
+				int nodeId = getNodeIdByElementId(elementId, cornerId);
 
-//					if (!isGravityActive) {
-//						nodeId = getNodeIdByElementId(elementId, 1);
-//					}
+				final String currentNodeId = "N" + nodeId;
+				if (!isGravityActive && currentNodeId.equals(selecedNodeId) || isGravityActive) {
+
 					if (!isNodeFixedInYAxis(nodeId)) {
 						final double valueY = forces.getValue(nodeId * 2 - 1);
 						forces.setValue(nodeId * 2 - 1, valueY + yForce * area);
@@ -709,7 +706,7 @@ public class Solver {
 
 				pre.append("\n{\"id\": ").append(nodeId);
 				pre.append(", \"idElement\": ").append(elementId);
-			    pre.append(", \"x_force\" : ").append(Double.isNaN(x_force) ? 0.0 : x_force * ZOOM_FACTOR);
+				pre.append(", \"x_force\" : ").append(Double.isNaN(x_force) ? 0.0 : x_force * ZOOM_FACTOR);
 				pre.append(", \"y_force\" : ").append(Double.isNaN(y_force) ? 0.0 : y_force * ZOOM_FACTOR);
 				pre.append(", \"x_d\" : ").append(Double.isNaN(x_d) ? 0.0 : x_d * ZOOM_FACTOR);
 				pre.append(", \"y_d\" : ").append(Double.isNaN(y_d) ? 0.0 : y_d * ZOOM_FACTOR);

@@ -40,13 +40,15 @@ function ModelRenderer() {
 	this.offset_x = 100;
 	this.offset_y = 280;
 
-	this.factorForce = 0.00005;
+	this.factorForce = 0.00002;
 	this.factorDisplacement = 0.02;
 
 	this.beta = 0.0;
 	this.gamma = 0.0;
 	this.isGravityActive = false;
-	this.selecedElementId = "";
+	this.selecedNodeId = null;
+	this.selecedNodeIdLast = null;
+	this.activeNodeId = null;
 
 	this.rotate = false;
 	this.display_scale = true;
@@ -70,7 +72,9 @@ function ModelRenderer() {
 		_that.mouseDownY = null;
 		_that.beta = 0.0;
 		_that.gamma = 0.0;
-		_that.selecedElementId = null;
+		_that.getCircleElementSVG(_that.selecedNodeId, "svgNodes").setAttribute('style', "opacity:0.0");
+		_that.selecedNodeId = null;
+		_that.activeNodeId = null;
 	}
 	this.graphic.addEventListener('mouseup', dragEndHandler, false);
 	this.graphic.addEventListener('touchend', dragEndHandler, false);
@@ -78,26 +82,23 @@ function ModelRenderer() {
 	// Handle move
 	var dragHandler = function(event) {
 		event.preventDefault();
-		var elementSVG = _that.getPoygonElementSVG('ArrowForce', "svgForce");
-		if (null != elementSVG) {
-			var isVisible = _that.selecedElementId != null;
-			if (isVisible) {
-				var pointsSVG = "";
-				var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
-				var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
-				// pointsSVG += [ _that.mouseDownX, _that.mouseDownY ].join(',')
-				// + ' ';
-				// pointsSVG += [ x2, y2 ].join(',') + ' ';
-				// elementSVG.setAttribute('points', pointsSVG.trim());
-
-				if (!_that.isGravityActive) {
-					_that.beta = -y2 + _that.mouseDownY;
-					_that.gamma = -x2 + _that.mouseDownX;
-				}
+		var isVisible = _that.selecedNodeId != null;
+		if (isVisible) {
+			var pointsSVG = "";
+			var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
+			var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
+			if (!_that.isGravityActive) {
+				_that.beta = -y2 + _that.mouseDownY;
+				_that.gamma = -x2 + _that.mouseDownX;
 			}
-			// elementSVG.setAttribute('style', "stroke:#00FF00;stroke-width:
-			// 1.0; visibility:" + ((false) ? "visible" : "hidden"));
 		}
+
+		var elementSVG = _that.getCircleElementSVG(_that.activeNodeId, "svgNodes");
+		if (event.target.id != _that.activeNodeId && !isVisible) {
+			elementSVG.setAttribute('style', "opacity: 0.0");
+			_that.activeNodeId = null;
+		}
+
 	}
 	this.graphic.addEventListener('mousemove', dragHandler, false);
 	this.graphic.addEventListener('touchmove', dragHandler, false);
@@ -128,7 +129,7 @@ function ModelRenderer() {
 			pointsSVG += [ this.offset_x_scala, this.offset_y_scala + index * delta_y ].join(',') + ' ';
 			pointsSVG += [ this.offset_x_scala + this.scala_size_x, this.offset_y_scala + index * delta_y ].join(',') + ' ';
 			pointsSVG += [ this.offset_x_scala + this.scala_size_x, this.offset_y_scala + (index + 1) * delta_y ].join(',') + ' ';
-			var elementSVG = this.getPoygonElementSVG(index, "svgLegend");
+			var elementSVG = this.getPolygonElementSVG(index, "svgLegend");
 			if (null != elementSVG) {
 				elementSVG.setAttribute('points', pointsSVG.trim());
 				elementSVG.setAttribute('style', "fill: " + this.getColor(value) + "; stroke: " + this.getColor(value));
@@ -191,16 +192,57 @@ function ModelRenderer() {
 		}
 	}
 
-	ModelRenderer.prototype.getPoygonElementSVG = function(id, groupId) {
+	ModelRenderer.prototype.getPolygonElementSVG = function(id, groupId) {
 		var elementSVG = document.getElementById(id);
 		if (null == elementSVG) {
 			elementSVG = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
 			elementSVG.setAttribute('id', id);
+			document.getElementById(groupId).appendChild(elementSVG);
+		}
+		return elementSVG;
+	}
+
+	ModelRenderer.prototype.getCircleElementSVG = function(id, groupId) {
+		var elementSVG = document.getElementById(id);
+		if (null == elementSVG) {
+			elementSVG = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+			elementSVG.setAttribute('id', id);
 			var title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
 			title.innerHTML = id;
+			elementSVG.setAttribute('style', "opacity:0.0");
 			elementSVG.appendChild(title);
-			var svg1 = document.getElementById(groupId);
-			svg1.appendChild(elementSVG);
+
+			// Add event listener for node
+			var _that = this;
+			elementSVG.addEventListener('mousedown', function(event) {
+				event.preventDefault();
+				_that.mouseDownX = event.clientX;
+				_that.mouseDownY = event.clientY;
+				_that.selecedNodeIdLast = _that.selecedNodeId;
+				_that.selecedNodeId = event.target.id;
+			}, false);
+			elementSVG.addEventListener('touchstart', function(event) {
+				event.preventDefault();
+				_that.mouseDownX = event.touches[0].clientX;
+				_that.mouseDownY = event.touches[0].clientY;
+				_that.selecedNodeIdLast = _that.selecedNodeId;
+				_that.selecedNodeId = event.target.id;
+			}, false);
+
+			elementSVG.addEventListener('mousemove', function(event) {
+				event.preventDefault();
+				_that.getCircleElementSVG(_that.activeNodeId, "svgNodes").setAttribute('style', "opacity:0.0");
+				_that.activeNodeId = event.target.id;
+				if (_that.activeNodeId != null) {
+					if (_that.selecedNodeId != null) {
+						_that.getCircleElementSVG(_that.selecedNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.9");
+					} else {
+						_that.getCircleElementSVG(_that.activeNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.4");
+					}
+				}
+			}, false);
+
+			document.getElementById(groupId).appendChild(elementSVG);
 		}
 		return elementSVG;
 	}
@@ -211,7 +253,7 @@ function ModelRenderer() {
 		pointsSVG += [ x, y ].join(',') + ' ';
 		pointsSVG += [ x - length, y - length * 0.75 ].join(',') + ' ';
 		pointsSVG += [ x - length, y + length * 0.75 ].join(',') + ' ';
-		var elementSVG = this.getPoygonElementSVG('FIX_V' + nodeId, "svgFixed");
+		var elementSVG = this.getPolygonElementSVG('FIX_V' + nodeId, "svgFixed");
 		if (null != elementSVG) {
 			elementSVG.setAttribute('points', pointsSVG.trim());
 			elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.5");
@@ -224,7 +266,7 @@ function ModelRenderer() {
 		pointsSVG += [ x, y ].join(',') + ' ';
 		pointsSVG += [ x + length * 0.75, y + length ].join(',') + ' ';
 		pointsSVG += [ x - length * 0.75, y + length ].join(',') + ' ';
-		var elementSVG = this.getPoygonElementSVG('FIX_H' + nodeId, "svgFixed");
+		var elementSVG = this.getPolygonElementSVG('FIX_H' + nodeId, "svgFixed");
 		if (null != elementSVG) {
 			elementSVG.setAttribute('points', pointsSVG.trim());
 			elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.5");
@@ -232,62 +274,54 @@ function ModelRenderer() {
 
 	}
 
-	ModelRenderer.prototype.draw_elements = function(elements) {
+	ModelRenderer.prototype.draw_elements = function(nodes) {
 
 		// calculate color range
 		this.minColor = 250.0;
 		this.maxColor = -250.0;
-		for (var ele = elements.length - 1; ele >= 0; ele--) {
-			var deltaX = elements[ele][0].deltaArea;
+		for (var ele = nodes.length - 1; ele >= 0; ele--) {
+			var deltaX = nodes[ele][0].deltaArea;
 			this.minColor = Math.min(deltaX, this.minColor);
 			this.maxColor = Math.max(deltaX, this.maxColor);
 		}
 		this.minColor = Math.min(this.minColor, -0.001);
 		this.maxColor = Math.max(this.maxColor, 0.001);
 
-		// render elements
-		for (var ele = elements.length - 1; ele >= 0; ele--) {
+		// render nodes
+		for (var ele = nodes.length - 1; ele >= 0; ele--) {
 			var pointsSVG = "";
-			var deltaX = elements[ele][0].deltaArea;
+			var node = null;
+			var deltaX = nodes[ele][0].deltaArea;
 			for (var nodeId = 0; nodeId < 3; nodeId++) {
-				element = elements[ele][nodeId];
-				var x = this.offset_x + element.x + element.x_d * this.factorDisplacement;
-				var y = this.offset_y + element.y + element.y_d * this.factorDisplacement;
+				node = nodes[ele][nodeId];
+				var x = this.offset_x + node.x + node.x_d * this.factorDisplacement;
+				var y = this.offset_y + node.y + node.y_d * this.factorDisplacement;
 				pointsSVG += [ x, y ].join(',') + ' ';
-				if (element.x_fixed) {
-					this.drawFixedVerticalSVG(x, y, element.id);
+				if (node.x_fixed) {
+					this.drawFixedVerticalSVG(x, y, node.id);
 				}
-				if (element.y_fixed) {
-					this.drawFixedHorizontalSVG(x, y, element.id);
+				if (node.y_fixed) {
+					this.drawFixedHorizontalSVG(x, y, node.id);
 				}
 
-				var isSelectedElement = !this.isGravityActive && ('E' + (element.idElement)) == this.selecedElementId;
-				if (isSelectedElement) {
-					console.log(this.selecedElementId + " nodeId=" + element.id + " fx=" + element.x_force + " fy=" + element.y_force);
+				var isSelectedElement = !this.isGravityActive && ('N' + (node.id)) == this.selecedNodeId;
+				this.drawVector(x, y, x + node.x_force * this.factorForce, y, true, (node.x_force > 0.0), node.id, isSelectedElement, node.x_fixed);
+				this.drawVector(x, y, x, y + node.y_force * this.factorForce, false, (node.y_force > 0.0), node.id, isSelectedElement, node.y_fixed);
+
+				// draw node
+				var elementSVG = this.getCircleElementSVG('N' + node.id, "svgNodes");
+				if (null != elementSVG) {
+					elementSVG.setAttribute('cx', x);
+					elementSVG.setAttribute('cy', y);
+					elementSVG.setAttribute('r', 4);
 				}
-				this.drawVector(x, y, x + element.x_force * this.factorForce, y, true, (element.x_force > 0.0), element.id, isSelectedElement,
-						element.x_fixed);
-				this.drawVector(x, y, x, y + element.y_force * this.factorForce, false, (element.y_force > 0.0), element.id, isSelectedElement,
-						element.y_fixed);
+
 			}
-			var _that = this;
-			var id = 'E' + element.idElement;
-			var elementSVG = this.getPoygonElementSVG(id, "svgElements");
+			var id = 'E' + node.idElement;
+			var elementSVG = this.getPolygonElementSVG(id, "svgElements");
 			if (null != elementSVG) {
 				elementSVG.setAttribute('points', pointsSVG.trim());
-				elementSVG.setAttribute('style', "fill:" + this.getColor(deltaX / 3.0) + ";");
-				elementSVG.addEventListener('mousedown', function(event) {
-					event.preventDefault();
-					_that.mouseDownX = event.clientX;
-					_that.mouseDownY = event.clientY;
-					_that.selecedElementId = event.target.id;
-				}, false);
-				elementSVG.addEventListener('touchstart', function(event) {
-					event.preventDefault();
-					_that.mouseDownX = event.touches[0].clientX;
-					_that.mouseDownY = event.touches[0].clientY;
-					_that.selecedElementId = event.target.id;
-				}, false);
+				elementSVG.setAttribute('style', "fill:" + this.getColor(deltaX) + ";");
 			}
 		}
 
@@ -298,8 +332,8 @@ function ModelRenderer() {
 
 	ModelRenderer.prototype.drawVector = function(startX, startY, endX, endY, horizontal, positive, ele, isSelectedElement, isFixedNode) {
 
-		var length = 5;
-		var isVisible = (isFixedNode && (Math.abs(startX - endX) + Math.abs(startY - endY) > length)) || isSelectedElement;
+		var length = 6;
+		var isVisible = (isFixedNode || isSelectedElement) && (Math.abs(startX - endX) + Math.abs(startY - endY) > length);
 
 		var pointsSVG = "";
 		if (isVisible) {
@@ -328,7 +362,7 @@ function ModelRenderer() {
 				pointsSVG += [ endX, endY ].join(',') + ' ';
 			}
 		}
-		var elementSVG = this.getPoygonElementSVG('Arrow_' + horizontal + ele, "svgArrows");
+		var elementSVG = this.getPolygonElementSVG('Arrow_' + horizontal + ele, "svgArrows");
 		if (null != elementSVG) {
 			elementSVG.setAttribute('points', pointsSVG.trim());
 			elementSVG.setAttribute('style', "stroke:#FF0000;stroke-width: 1.0; visibility:" + ((isVisible) ? "visible" : "hidden"));

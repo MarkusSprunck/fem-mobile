@@ -42,6 +42,7 @@
 
 	<svg xmlns="http://www.w3.org/2000/svg" class="svg" id="mySVGGui">		 
 		 <g id="svgElements" />
+		 <g id="svgNodes" />
 		 <g id="svgFixed" />
   		 <g id="svgArrows" />
   		 <g id="svgLegend" />
@@ -211,8 +212,8 @@
 			return '' + modelRenderer.isGravityActive;
 		}
 
-		function selecedElementId() {
-			return '' + modelRenderer.selecedElementId;
+		function selecedNodeId() {
+			return '' + modelRenderer.selecedNodeId ;
 		}
 
 		function setBeta(value) {

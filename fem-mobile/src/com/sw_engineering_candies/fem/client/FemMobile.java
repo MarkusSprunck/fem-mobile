@@ -52,12 +52,12 @@ public class FemMobile implements EntryPoint {
 
 	static Double gamma = 0.0;
 
-	static String selecedElementId = "";
+	static String selecedNodeId = "";
 
 	static boolean isGravityActive = false;
 
 	public FemMobile() {
-		final String inputModel2 = ModelFactory.createDefaultModel(300, 40, 30, 4, 0).toString();
+		final String inputModel2 = ModelFactory.createDefaultModel(300, 30, 60, 6, 0).toString();
 		// final String inputModel2 = ModelFactory.createEiffelTowerModel();
 
 		model.createModel(inputModel2);
@@ -65,11 +65,11 @@ public class FemMobile implements EntryPoint {
 	}
 
 	public void updateModel() {
-		
+
 		getValuesFromGui();
 
 		final double start = System.currentTimeMillis();
-		final Vector forces = model.caluculateInputForces(beta, gamma, isGravityActive, selecedElementId);
+		final Vector forces = model.caluculateInputForces(beta, gamma, isGravityActive, selecedNodeId);
 		model.solve(forces);
 		setModel(model.getJSON());
 
@@ -95,7 +95,7 @@ public class FemMobile implements EntryPoint {
 		}
 
 		if (null != currentIsGravityActive && !currentIsGravityActive.isEmpty()) {
-			selecedElementId = selecedElementId();
+			selecedNodeId = selecedNodeId();
 		}
 
 	}
@@ -124,9 +124,9 @@ public class FemMobile implements EntryPoint {
 		return $wnd.isGravityActive();
 	}-*/;
 
-	public static native String selecedElementId()
+	public static native String selecedNodeId()
 	/*-{
-		return $wnd.selecedElementId();
+		return $wnd.selecedNodeId();
 	}-*/;
 
 	/**
@@ -142,7 +142,7 @@ public class FemMobile implements EntryPoint {
 				updateModel();
 			}
 		};
-		timerGraficUpdate.scheduleRepeating(250);
+		timerGraficUpdate.scheduleRepeating(100);
 	}
 
 }
