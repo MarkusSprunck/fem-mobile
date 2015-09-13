@@ -57,7 +57,7 @@ public class FemMobile implements EntryPoint {
 	static boolean isGravityActive = false;
 
 	public FemMobile() {
-		final String inputModel2 = ModelFactory.createDefaultModel(300, 30, 60, 6, 0).toString();
+		final String inputModel2 = ModelFactory.createDefaultModel(350, 60, 35, 6, 0).toString();
 		// final String inputModel2 = ModelFactory.createEiffelTowerModel();
 
 		model.createModel(inputModel2);

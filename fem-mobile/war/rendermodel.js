@@ -235,9 +235,9 @@ function ModelRenderer() {
 				_that.activeNodeId = event.target.id;
 				if (_that.activeNodeId != null) {
 					if (_that.selecedNodeId != null) {
-						_that.getCircleElementSVG(_that.selecedNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.9");
+						_that.getCircleElementSVG(_that.selecedNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:1.0");
 					} else {
-						_that.getCircleElementSVG(_that.activeNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.4");
+						_that.getCircleElementSVG(_that.activeNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.8");
 					}
 				}
 			}, false);

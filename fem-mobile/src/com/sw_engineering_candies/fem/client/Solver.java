@@ -447,22 +447,6 @@ public class Solver {
 		return numberOfElements;
 	}
 
-	public double getSolutionsDisplacementsMeanY(final int elementId) {
-		return solutionsDisplacementsMeanY[elementId - 1];
-	}
-
-	public Vector getInputForces() {
-		return inputForces;
-	}
-
-	public Vector getInputDisplacements() {
-		return inputDisplacements;
-	}
-
-	public double[] getSolutionForces() {
-		return solutionForces.values;
-	}
-
 	public double getSolutionNodeDisplacementY(final int nodeId) {
 		return !isSolved ? 0.0 : solutionDisplacements.getValue(nodeId * 2 - 1);
 	}
@@ -663,30 +647,11 @@ public class Solver {
 		return bandWidth;
 	}
 
-	public Vector calculateSolutionsDisplacementsMean() {
-		final Vector result = new Vector(getNumberOfElements() * 2);
-		final int numberOfElements = getNumberOfElements();
-		double delta1, delta2, delta3;
-		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
-			delta1 = getDisplacementX(elementId, 1);
-			delta2 = getDisplacementX(elementId, 2);
-			delta3 = getDisplacementX(elementId, 3);
-			result.setValue(2 * elementId - 2, (delta3 + delta2 + delta1) / 3.0);
-			delta1 = getDisplacementY(elementId, 1);
-			delta2 = getDisplacementY(elementId, 2);
-			delta3 = getDisplacementY(elementId, 3);
-			result.setValue(2 * elementId - 1, (delta3 + delta2 + delta1) / 3.0);
-		}
-		return result;
-	}
-
 	public String getJSON() {
 
 		final double start = System.currentTimeMillis();
 
 		final int numberOfElements = getNumberOfElements();
-
-		final Vector deltaVector = calculateSolutionsDisplacementsMean();
 
 		final HashMap<Integer, Boolean> nodeIds = new HashMap<Integer, Boolean>();
 		final StringBuilder pre = new StringBuilder("[");
@@ -733,24 +698,12 @@ public class Solver {
 		return pre.toString();
 	}
 
-	public double getThickness() {
-		return thickness;
-	}
-
 	public void setThickness(final double thickness) {
 		Solver.thickness = thickness;
 	}
 
-	public double getPoissonRatio() {
-		return poissonRatio;
-	}
-
 	public void setPoissonRatio(final double poissonRatio) {
 		Solver.poissonRatio = poissonRatio;
-	}
-
-	public double getYoungsModulus() {
-		return youngsModulus;
 	}
 
 	public void setYoungsModulus(final double youngsModulus) {

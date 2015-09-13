@@ -87,16 +87,8 @@ public class Vector {
 		values[index] = value;
 	}
 
-	public void addValue(final int index, final double value) {
-		values[index] += value;
-	}
-
 	public double getValue(final int index) {
 		return values[index];
-	}
-
-	protected double[] getValues() {
-		return values;
 	}
 
 	public int getMaxRows() {
@@ -105,7 +97,7 @@ public class Vector {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder("Vector       [");
+		final StringBuilder sb = new StringBuilder("Vector [");
 		for (final double value : values) {
 			sb.append(value).append("  ");
 		}
