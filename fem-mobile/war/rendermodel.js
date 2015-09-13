@@ -45,6 +45,8 @@ function ModelRenderer() {
 
 	this.beta = 0.0;
 	this.gamma = 0.0;
+	this.forceX = 0.0;
+	this.forceY = 0.0;
 	this.isGravityActive = false;
 	this.selecedNodeId = null;
 	this.selecedNodeIdLast = null;
@@ -88,8 +90,9 @@ function ModelRenderer() {
 			var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
 			var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
 			if (!_that.isGravityActive) {
-				_that.beta = -y2 + _that.mouseDownY;
-				_that.gamma = -x2 + _that.mouseDownX;
+				var factor = 150;
+				_that.forceY = -(-y2 + _that.mouseDownY) * factor;
+				_that.forceX = -(-x2 + _that.mouseDownX) * factor;
 			}
 		}
 

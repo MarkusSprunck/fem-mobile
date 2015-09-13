@@ -136,15 +136,48 @@ public class Solver {
 	 * @param selecedNodeId
 	 * @param isGravityActive
 	 */
-	public Vector caluculateInputForces(final double beta, final double gamma, final boolean isGravityActive, final String selecedNodeId) {
+	public Vector caluculateInputForcesGravity(final double beta, final double gamma) {
 
 		Vector forces = null;
 		int maxRows = inputForces.getMaxRows();
 
 		// Calculate forces based on mobile sensor data
-		final double factor = isGravityActive ? 3000.0 / maxRows : 10000.0;
+		final double factor = 3000.0 / maxRows;
 		final double yForce = factor * Math.sin(-beta / 180 * Math.PI);
 		final double xForce = factor * Math.sin(-gamma / 180 * Math.PI);
+
+		// Create forces for nodes which are not fixed
+		forces = new Vector(maxRows);
+		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
+			final double area = calculateAreaOfElement(elementId);
+			for (int cornerId = 1; cornerId < 4; cornerId++) {
+				int nodeId = getNodeIdByElementId(elementId, cornerId);
+				if (!isNodeFixedInYAxis(nodeId)) {
+					final double valueY = forces.getValue(nodeId * 2 - 1);
+					forces.setValue(nodeId * 2 - 1, valueY + yForce * area);
+				}
+				if (!isNodeFixedInXAxis(nodeId)) {
+					final double valueX = forces.getValue(nodeId * 2 - 2);
+					forces.setValue(nodeId * 2 - 2, valueX + xForce * area);
+				}
+			}
+		}
+		return forces;
+	}
+
+	/**
+	 * Simulate gravity based on the sensor data of the mobile device
+	 * @param selecedNodeId
+	 * @param isGravityActive
+	 */
+	public Vector caluculateInputForcesSingle(final double forceX, final double forceY, final String selecedNodeId) {
+
+		Vector forces = null;
+		int maxRows = inputForces.getMaxRows();
+
+		// Calculate forces based on mobile sensor data
+		final double yForce = forceY;
+		final double xForce = forceX;
 
 		// Create forces for nodes which are not fixed
 		forces = new Vector(maxRows);
@@ -156,7 +189,7 @@ public class Solver {
 				int nodeId = getNodeIdByElementId(elementId, cornerId);
 
 				final String currentNodeId = "N" + nodeId;
-				if (!isGravityActive && currentNodeId.equals(selecedNodeId) || isGravityActive) {
+				if (currentNodeId.equals(selecedNodeId)) {
 
 					if (!isNodeFixedInYAxis(nodeId)) {
 						final double valueY = forces.getValue(nodeId * 2 - 1);

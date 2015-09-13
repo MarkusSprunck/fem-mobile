@@ -481,7 +481,7 @@ public class BandMatrixFullTest {
 
 		// ARRANGE
 		final BandMatrixFull A = model.stiffnessRearanged;
-		final Vector inputForces = model.caluculateInputForces(10, 20, true, "");
+		final Vector inputForces = model.caluculateInputForcesGravity(10, 20);
 
 		// ACT
 		final Vector x_result = BandMatrixFull.solve(A, inputForces, 400);

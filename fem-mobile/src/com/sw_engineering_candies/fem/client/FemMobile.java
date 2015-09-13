@@ -44,64 +44,52 @@ import com.google.gwt.user.client.Timer;
  */
 public class FemMobile implements EntryPoint {
 
-	final static boolean isModel2Active = false;
-
+	/**  FEM Model for 2D Mechanics*/
 	final static Solver model = new Solver();
 
+	/** Case I: Device orientation for Gravity */
 	static Double beta = 0.0;
-
 	static Double gamma = 0.0;
 
+	/** Case II: Single force */
+	static Double forceX = 0.0;
+	static Double forceY = 0.0;
 	static String selecedNodeId = "";
 
+	/** Activates the kind of force to be applied */
 	static boolean isGravityActive = false;
 
+	static String modelName = "Cantilever";
+
 	public FemMobile() {
-		final String inputModel2 = ModelFactory.createDefaultModel(350, 60, 35, 6, 0).toString();
-		// final String inputModel2 = ModelFactory.createEiffelTowerModel();
-
-		model.createModel(inputModel2);
+		if ("Cantilever".equalsIgnoreCase(modelName)) {
+			model.createModel(ModelFactory.createDefaultModel(350, 60, 35, 6, 0).toString());
+		} else {
+			model.createModel(ModelFactory.createEiffelTowerModel());
+		}
 		setModel(model.getJSON());
 	}
 
-	public void updateModel() {
-
-		getValuesFromGui();
-
-		final double start = System.currentTimeMillis();
-		final Vector forces = model.caluculateInputForces(beta, gamma, isGravityActive, selecedNodeId);
-		model.solve(forces);
+	public void runSimulation() {
+		if (isGravityActive) {
+			model.solve(model.caluculateInputForcesGravity(beta, gamma));
+		} else {
+			model.solve(model.caluculateInputForcesSingle(forceX, forceY, selecedNodeId));
+		}
 		setModel(model.getJSON());
-
-		final double end = System.currentTimeMillis();
-		System.out.println("update model ready       [" + (end - start) + "ms]");
 	}
 
-	public static void getValuesFromGui() {
-
-		final String currentBetaNew = getBeta();
-		if (null != currentBetaNew && !currentBetaNew.isEmpty()) {
-			beta = Double.valueOf(currentBetaNew);
-		}
-
-		final String currentGammaNew = getGamma();
-		if (null != currentGammaNew && !currentGammaNew.isEmpty()) {
-			gamma = Double.valueOf(currentGammaNew);
-		}
-
-		final String currentIsGravityActive = isGravityActive();
-		if (null != currentIsGravityActive && !currentIsGravityActive.isEmpty()) {
-			isGravityActive = Boolean.parseBoolean(currentIsGravityActive);
-		}
-
-		if (null != currentIsGravityActive && !currentIsGravityActive.isEmpty()) {
-			selecedNodeId = selecedNodeId();
-		}
-
+	public static void fetchValuesFromGui() {
+		forceY = Double.valueOf(getForceY());
+		forceX = Double.valueOf(getForceX());
+		beta = Double.valueOf(getBeta());
+		gamma = Double.valueOf(getGamma());
+		isGravityActive = Boolean.parseBoolean(isGravityActive());
+		selecedNodeId = (null != selecedNodeId()) ? selecedNodeId() : "";
 	}
 
 	public static native void exportStaticMethod() /*-{
-		$wnd.updateForces = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getValuesFromGui());
+		$wnd.updateForces = $entry(@com.sw_engineering_candies.fem.client.FemMobile::fetchValuesFromGui());
 	}-*/;
 
 	public static native void setModel(String model)
@@ -119,6 +107,16 @@ public class FemMobile implements EntryPoint {
 		return $wnd.getGamma();
 	}-*/;
 
+	public static native String getForceX()
+	/*-{
+		return $wnd.getForceX();
+	}-*/;
+
+	public static native String getForceY()
+	/*-{
+		return $wnd.getForceY();
+	}-*/;
+
 	public static native String isGravityActive()
 	/*-{
 		return $wnd.isGravityActive();
@@ -134,12 +132,14 @@ public class FemMobile implements EntryPoint {
 	 */
 	@Override
 	public void onModuleLoad() {
+
 		exportStaticMethod();
 
 		final Timer timerGraficUpdate = new Timer() {
 			@Override
 			public void run() {
-				updateModel();
+				fetchValuesFromGui();
+				runSimulation();
 			}
 		};
 		timerGraficUpdate.scheduleRepeating(100);
