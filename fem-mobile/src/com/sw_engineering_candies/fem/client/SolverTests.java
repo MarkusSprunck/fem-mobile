@@ -20,7 +20,7 @@ public class SolverTests {
 		final int cols = 10;
 		final int rows = 5;
 		final double force = 1234;
-		final String inputModel = ModelFactory.createDefaultModel(length, hight, cols, rows, force).toString();
+		final String inputModel = ModelFactory.createDefaultModel(length, hight, cols, rows, force, false).toString();
 		model.createModel(inputModel);
 
 		// ACT
@@ -28,7 +28,7 @@ public class SolverTests {
 		model.getJSON();
 
 		// ASSERT
-		assertEquals(0.05105831804202231, model.getSolutionNodeDisplacementY(cols * rows), 0.00000001);
+		assertEquals(0.05030161207750177, model.getSolutionNodeDisplacementY(cols * rows), 0.00000001);
 	}
 
 

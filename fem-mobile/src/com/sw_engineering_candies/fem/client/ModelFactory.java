@@ -556,18 +556,18 @@ public class ModelFactory {
 		result.append("E 311 200 202 201").append("\n");
 		result.append("D 1 x 0.0").append("\n");
 		result.append("D 1 y 0.0").append("\n");
-		result.append("D 2 x 0.0").append("\n");
+//		result.append("D 2 x 0.0").append("\n");
 		result.append("D 2 y 0.0").append("\n");
-		result.append("D 24 x 0.0").append("\n");
+//		result.append("D 24 x 0.0").append("\n");
 		result.append("D 24 y 0.0").append("\n");
-		result.append("D 25 x 0.0").append("\n");
+//		result.append("D 25 x 0.0").append("\n");
 		result.append("D 25 y 0.0").append("\n");
 		result.append("F 13 y 0.01").append("\n");
 		return result.toString();
 	}
-	
+
 	// model, length, height,  cols, rows, force
-	public static String createDefaultModel(final int length, final int height, final int maxCols, final int maxRows, final double force) {
+	public static String createDefaultModel(final int length, final int height, final int maxCols, final int maxRows, final double force, final boolean isBeam) {
 		final StringBuffer nodeText = new StringBuffer();
 		final double scaleFactorX = length / maxCols;
 		final double scaleFactorY = height / maxRows;
@@ -591,15 +591,18 @@ public class ModelFactory {
 			}
 		}
 
+		nodeText.append("D ").append(1).append(" y ").append(0).append("\n");
 		for (int row = 1; row <= maxRows; row++) {
 			nodeText.append("D ").append(row).append(" x ").append(0).append("\n");
 		}
-		nodeText.append("D ").append(maxRows).append(" y ").append(0).append("\n");
+
+		if (isBeam) {
+			nodeText.append("D ").append((maxCols - 1) * maxRows + 1).append(" y ").append(0).append("\n");
+		}
 
 		nodeText.append("F ").append(maxRows * (maxCols - 1) + 1).append(" y ").append(force).append("\n");
 
 		return nodeText.toString();
 	}
-
 
 }

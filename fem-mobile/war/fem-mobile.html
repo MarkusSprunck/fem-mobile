@@ -100,6 +100,29 @@
 				if (typeof window.orientation === "undefined") {
 					gui.add(modelRenderer, 'beta', -90, 90).step(0.1).name('Rotate X-Axis').listen();
 					gui.add(modelRenderer, 'gamma', -90, 90).step(0.1).name('Rotate Y-Axis').listen();
+					gui.add(modelRenderer, 'modelName', [ 'Cantilever', 'Beam', 'Eiffel Tower' ]).name('Model').listen().onChange(function(value) {
+						console.log("modelName=" + modelRenderer.modelName);
+
+						var myNode = document.getElementById('svgElements');
+						while (myNode.firstChild) {
+							myNode.removeChild(myNode.firstChild);
+						}
+
+						var myNode = document.getElementById('svgNodes');
+						while (myNode.firstChild) {
+							myNode.removeChild(myNode.firstChild);
+						}
+
+						var myNode = document.getElementById('svgFixed');
+						while (myNode.firstChild) {
+							myNode.removeChild(myNode.firstChild);
+						}
+
+						var myNode = document.getElementById('svgArrows');
+						while (myNode.firstChild) {
+							myNode.removeChild(myNode.firstChild);
+						}
+					});
 				}
 				gui.add(modelRenderer, 'isGravityActive').name('Gravity').listen().onChange(function(value) {
 					if (!value) {
@@ -213,7 +236,7 @@
 		}
 
 		function selecedNodeId() {
-			return '' + modelRenderer.selecedNodeId ;
+			return '' + modelRenderer.selecedNodeId;
 		}
 
 		function setBeta(value) {
@@ -223,13 +246,17 @@
 		function setGamma(value) {
 			modelRenderer.gamma = value;
 		}
-		
+
 		function getForceX() {
-			return '' +modelRenderer.forceX ;
+			return '' + modelRenderer.forceX;
 		}
-		
+
 		function getForceY() {
-			return '' +modelRenderer.forceY;
+			return '' + modelRenderer.forceY;
+		}
+
+		function getModelName() {
+			return '' + modelRenderer.modelName;
 		}
 
 		function setGravityActive(value) {

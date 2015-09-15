@@ -45,7 +45,7 @@ import com.google.gwt.user.client.Timer;
 public class FemMobile implements EntryPoint {
 
 	/**  FEM Model for 2D Mechanics*/
-	final static Solver model = new Solver();
+	static Solver model;
 
 	/** Case I: Device orientation for Gravity */
 	static Double beta = 0.0;
@@ -59,12 +59,20 @@ public class FemMobile implements EntryPoint {
 	/** Activates the kind of force to be applied */
 	static boolean isGravityActive = false;
 
-	static String modelName = "Cantilever";
+	static String modelName = "";
 
 	public FemMobile() {
+		initModel();
+	}
+
+	private static void initModel() {
+		model = new Solver();
+
 		if ("Cantilever".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createDefaultModel(350, 60, 35, 6, 0).toString());
-		} else {
+			model.createModel(ModelFactory.createDefaultModel(350, 30, 70, 6, 0, false).toString());
+		} else if ("Beam".equalsIgnoreCase(modelName)) {
+			model.createModel(ModelFactory.createDefaultModel(350, 30, 70, 6, 0, true).toString());
+		} else if ("Eiffel Tower".equalsIgnoreCase(modelName)) {
 			model.createModel(ModelFactory.createEiffelTowerModel());
 		}
 		setModel(model.getJSON());
@@ -86,6 +94,11 @@ public class FemMobile implements EntryPoint {
 		gamma = Double.valueOf(getGamma());
 		isGravityActive = Boolean.parseBoolean(isGravityActive());
 		selecedNodeId = (null != selecedNodeId()) ? selecedNodeId() : "";
+
+		if (!modelName.equalsIgnoreCase(getModelName())) {
+			modelName = getModelName();
+			initModel();
+		}
 	}
 
 	public static native void exportStaticMethod() /*-{
@@ -115,6 +128,11 @@ public class FemMobile implements EntryPoint {
 	public static native String getForceY()
 	/*-{
 		return $wnd.getForceY();
+	}-*/;
+
+	public static native String getModelName()
+	/*-{
+		return $wnd.getModelName();
 	}-*/;
 
 	public static native String isGravityActive()

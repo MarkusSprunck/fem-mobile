@@ -31,17 +31,17 @@
 function ModelRenderer() {
 
 	// Parameter for legend
-	this.scalaNumber = 18.0;
+	this.scalaNumber = 25.0;
 	this.scala_size_x = 15;
-	this.scala_size_y = 300;
+	this.scala_size_y = 395;
 	this.offset_x_scala = 0.0;
 	this.offset_y_scala = 80.0;
 
 	this.offset_x = 100;
-	this.offset_y = 280;
+	this.offset_y = 500;
 
-	this.factorForce = 0.00002;
-	this.factorDisplacement = 0.02;
+	this.factorForce = 0.01;
+	this.factorDisplacement = 0.1;
 
 	this.beta = 0.0;
 	this.gamma = 0.0;
@@ -51,6 +51,8 @@ function ModelRenderer() {
 	this.selecedNodeId = null;
 	this.selecedNodeIdLast = null;
 	this.activeNodeId = null;
+
+	this.modelName = "Eiffel Tower";
 
 	this.rotate = false;
 	this.display_scale = true;
@@ -90,9 +92,9 @@ function ModelRenderer() {
 			var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
 			var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
 			if (!_that.isGravityActive) {
-				var factor = 150;
-				_that.forceY = -(-y2 + _that.mouseDownY) * factor;
-				_that.forceX = -(-x2 + _that.mouseDownX) * factor;
+				var factor = 1;
+				_that.forceY = (y2 - _that.mouseDownY) * factor;
+				_that.forceX = (x2 - _that.mouseDownX) * factor;
 			}
 		}
 
@@ -160,7 +162,7 @@ function ModelRenderer() {
 			text.setAttribute('style', 'text-anchor: start;');
 			text.setAttribute('fill', '#FFFFFF');
 			text.setAttribute('x', this.offset_x_scala);
-			text.setAttribute('y', this.offset_y + 260);
+			text.setAttribute('y', this.offset_y + 60);
 			var svg1 = document.getElementById("svgStatusLine");
 			svg1.appendChild(text);
 		}
@@ -283,7 +285,7 @@ function ModelRenderer() {
 		this.minColor = 250.0;
 		this.maxColor = -250.0;
 		for (var ele = nodes.length - 1; ele >= 0; ele--) {
-			var deltaX = nodes[ele][0].deltaArea;
+			var deltaX = nodes[ele][0].y_d;// nodes[ele][0].deltaArea;
 			this.minColor = Math.min(deltaX, this.minColor);
 			this.maxColor = Math.max(deltaX, this.maxColor);
 		}
@@ -294,7 +296,7 @@ function ModelRenderer() {
 		for (var ele = nodes.length - 1; ele >= 0; ele--) {
 			var pointsSVG = "";
 			var node = null;
-			var deltaX = nodes[ele][0].deltaArea;
+			var deltaX = nodes[ele][0].y_d;// nodes[ele][0].deltaArea;
 			for (var nodeId = 0; nodeId < 3; nodeId++) {
 				node = nodes[ele][nodeId];
 				var x = this.offset_x + node.x + node.x_d * this.factorDisplacement;
@@ -308,6 +310,11 @@ function ModelRenderer() {
 				}
 
 				var isSelectedElement = !this.isGravityActive && ('N' + (node.id)) == this.selecedNodeId;
+				//TODO: this is a workaround to show the forces in a correct way
+				if (isSelectedElement && this.modelName === "Eiffel Tower") {
+					node.x_force *= -1;
+					node.y_force *= -1;
+				}
 				this.drawVector(x, y, x + node.x_force * this.factorForce, y, true, (node.x_force > 0.0), node.id, isSelectedElement, node.x_fixed);
 				this.drawVector(x, y, x, y + node.y_force * this.factorForce, false, (node.y_force > 0.0), node.id, isSelectedElement, node.y_fixed);
 
