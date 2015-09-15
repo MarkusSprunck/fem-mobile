@@ -142,7 +142,7 @@ public class Solver {
 		int maxRows = inputForces.getMaxRows();
 
 		// Calculate forces based on mobile sensor data
-		final double factor = 3000.0 / maxRows;
+		final double factor = 100.0 / maxRows;
 		final double yForce = factor * Math.sin(-beta / 180 * Math.PI);
 		final double xForce = factor * Math.sin(-gamma / 180 * Math.PI);
 

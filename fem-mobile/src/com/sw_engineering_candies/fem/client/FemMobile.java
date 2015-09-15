@@ -93,7 +93,7 @@ public class FemMobile implements EntryPoint {
 		beta = Double.valueOf(getBeta());
 		gamma = Double.valueOf(getGamma());
 		isGravityActive = Boolean.parseBoolean(isGravityActive());
-		selecedNodeId = (null != selecedNodeId()) ? selecedNodeId() : "";
+		selecedNodeId = (null != getSelecedNodeId()) ? getSelecedNodeId() : "";
 
 		if (!modelName.equalsIgnoreCase(getModelName())) {
 			modelName = getModelName();
@@ -140,9 +140,9 @@ public class FemMobile implements EntryPoint {
 		return $wnd.isGravityActive();
 	}-*/;
 
-	public static native String selecedNodeId()
+	public static native String getSelecedNodeId()
 	/*-{
-		return $wnd.selecedNodeId();
+		return $wnd.getSelecedNodeId();
 	}-*/;
 
 	/**

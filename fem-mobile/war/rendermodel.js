@@ -27,6 +27,14 @@
  * 
  * 
  */
+function renderOptionsDefinition() {
+	"use strict";
+	return {
+		MODEL_NAME : "Beam",
+		GRAVITY_ACTIVE : true
+	};
+}
+var Options = renderOptionsDefinition();
 
 function ModelRenderer() {
 
@@ -47,12 +55,10 @@ function ModelRenderer() {
 	this.gamma = 0.0;
 	this.forceX = 0.0;
 	this.forceY = 0.0;
-	this.isGravityActive = false;
 	this.selecedNodeId = null;
 	this.selecedNodeIdLast = null;
 	this.activeNodeId = null;
-
-	this.modelName = "Eiffel Tower";
+	this.colorCode = 1;
 
 	this.rotate = false;
 	this.display_scale = true;
@@ -91,7 +97,7 @@ function ModelRenderer() {
 			var pointsSVG = "";
 			var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
 			var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
-			if (!_that.isGravityActive) {
+			if (!Options.GRAVITY_ACTIVE) {
 				var factor = 1;
 				_that.forceY = (y2 - _that.mouseDownY) * factor;
 				_that.forceX = (x2 - _that.mouseDownX) * factor;
@@ -145,10 +151,10 @@ function ModelRenderer() {
 				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 				text.setAttribute('id', "LT1" + index);
 			}
-			text.setAttribute('x', this.offset_x_scala + this.scala_size_x * 4.0);
+			text.setAttribute('x', this.offset_x_scala + this.scala_size_x * 4.5);
 			text.setAttribute('y', this.offset_y_scala + (index + 0.75) * this.scala_size_y / this.scalaNumber);
 			text.setAttribute('fill', '#FFFFFF');
-			text.textContent = value.toFixed(3);
+			text.textContent = value.toFixed(4);
 			var svg1 = document.getElementById("svgLegend");
 			svg1.appendChild(text);
 		}
@@ -225,6 +231,7 @@ function ModelRenderer() {
 				_that.mouseDownY = event.clientY;
 				_that.selecedNodeIdLast = _that.selecedNodeId;
 				_that.selecedNodeId = event.target.id;
+				Options.GRAVITY_ACTIVE = false;
 			}, false);
 			elementSVG.addEventListener('touchstart', function(event) {
 				event.preventDefault();
@@ -232,6 +239,7 @@ function ModelRenderer() {
 				_that.mouseDownY = event.touches[0].clientY;
 				_that.selecedNodeIdLast = _that.selecedNodeId;
 				_that.selecedNodeId = event.target.id;
+				Options.GRAVITY_ACTIVE = false;
 			}, false);
 
 			elementSVG.addEventListener('mousemove', function(event) {
@@ -279,24 +287,25 @@ function ModelRenderer() {
 
 	}
 
-	ModelRenderer.prototype.draw_elements = function(nodes) {
-
-		// calculate color range
+	ModelRenderer.prototype.calculateColorRange = function(nodes) {
 		this.minColor = 250.0;
 		this.maxColor = -250.0;
 		for (var ele = nodes.length - 1; ele >= 0; ele--) {
-			var deltaX = nodes[ele][0].y_d;// nodes[ele][0].deltaArea;
+			var deltaX = (this.colorCode == 1) ? nodes[ele][0].x_d : (this.colorCode == 2) ? -nodes[ele][0].y_d : nodes[ele][0].deltaArea;
 			this.minColor = Math.min(deltaX, this.minColor);
 			this.maxColor = Math.max(deltaX, this.maxColor);
 		}
-		this.minColor = Math.min(this.minColor, -0.001);
-		this.maxColor = Math.max(this.maxColor, 0.001);
+		this.minColor = Math.min(this.minColor, -0.0001);
+		this.maxColor = Math.max(this.maxColor, 0.0001);
+	}
+
+	ModelRenderer.prototype.renderModel = function(nodes) {
 
 		// render nodes
 		for (var ele = nodes.length - 1; ele >= 0; ele--) {
 			var pointsSVG = "";
 			var node = null;
-			var deltaX = nodes[ele][0].y_d;// nodes[ele][0].deltaArea;
+			var deltaX = (this.colorCode == 1) ? nodes[ele][0].x_d : (this.colorCode == 2) ? nodes[ele][0].y_d : nodes[ele][0].deltaArea;
 			for (var nodeId = 0; nodeId < 3; nodeId++) {
 				node = nodes[ele][nodeId];
 				var x = this.offset_x + node.x + node.x_d * this.factorDisplacement;
@@ -309,9 +318,10 @@ function ModelRenderer() {
 					this.drawFixedHorizontalSVG(x, y, node.id);
 				}
 
-				var isSelectedElement = !this.isGravityActive && ('N' + (node.id)) == this.selecedNodeId;
-				//TODO: this is a workaround to show the forces in a correct way
-				if (isSelectedElement && this.modelName === "Eiffel Tower") {
+				var isSelectedElement = !Options.GRAVITY_ACTIVE && ('N' + (node.id)) == this.selecedNodeId;
+				// TODO: this is a workaround to show the forces in a correct
+				// way
+				if (isSelectedElement && Options.MODEL_NAME === "Eiffel Tower") {
 					node.x_force *= -1;
 					node.y_force *= -1;
 				}

@@ -100,31 +100,38 @@
 				if (typeof window.orientation === "undefined") {
 					gui.add(modelRenderer, 'beta', -90, 90).step(0.1).name('Rotate X-Axis').listen();
 					gui.add(modelRenderer, 'gamma', -90, 90).step(0.1).name('Rotate Y-Axis').listen();
-					gui.add(modelRenderer, 'modelName', [ 'Cantilever', 'Beam', 'Eiffel Tower' ]).name('Model').listen().onChange(function(value) {
-						console.log("modelName=" + modelRenderer.modelName);
-
-						var myNode = document.getElementById('svgElements');
-						while (myNode.firstChild) {
-							myNode.removeChild(myNode.firstChild);
-						}
-
-						var myNode = document.getElementById('svgNodes');
-						while (myNode.firstChild) {
-							myNode.removeChild(myNode.firstChild);
-						}
-
-						var myNode = document.getElementById('svgFixed');
-						while (myNode.firstChild) {
-							myNode.removeChild(myNode.firstChild);
-						}
-
-						var myNode = document.getElementById('svgArrows');
-						while (myNode.firstChild) {
-							myNode.removeChild(myNode.firstChild);
-						}
-					});
 				}
-				gui.add(modelRenderer, 'isGravityActive').name('Gravity').listen().onChange(function(value) {
+				gui.add(Options, 'MODEL_NAME', [ 'Cantilever', 'Beam', 'Eiffel Tower' ]).name('Model').listen().onChange(function(value) {
+					console.log("MODEL_NAME=" + Options.MODEL_NAME);
+
+					var myNode = document.getElementById('svgElements');
+					while (myNode.firstChild) {
+						myNode.removeChild(myNode.firstChild);
+					}
+
+					var myNode = document.getElementById('svgNodes');
+					while (myNode.firstChild) {
+						myNode.removeChild(myNode.firstChild);
+					}
+
+					var myNode = document.getElementById('svgFixed');
+					while (myNode.firstChild) {
+						myNode.removeChild(myNode.firstChild);
+					}
+
+					var myNode = document.getElementById('svgArrows');
+					while (myNode.firstChild) {
+						myNode.removeChild(myNode.firstChild);
+					}
+				});
+
+				gui.add(modelRenderer, 'colorCode', {
+					X : 1,
+					Y : 2,
+					Area : 3
+				}).name('Color Code');
+
+				gui.add(Options, 'GRAVITY_ACTIVE').name('Gravity').listen().onChange(function(value) {
 					if (!value) {
 						modelRenderer.beta = 0.0;
 						modelRenderer.gamma = 0.0;
@@ -136,15 +143,22 @@
 
 				initReady = true;
 			} else {
-				// Render SVG
-				elements = JSON.parse(inputModel);
-				modelRenderer.draw_elements(elements);
+				// Render SVG				
+				model = JSON.parse(inputModel);
+				modelRenderer.calculateColorRange(model);
+				modelRenderer.renderModel(model);
 
 				// Update statusline
-				var b = Math.round(modelRenderer.beta);
-				var g = Math.round(modelRenderer.gamma);
-				modelRenderer.setStatusLineText(modelRenderer.orientation + ', β=' + b + ', γ=' + g + ', ' + fps.getFPS() + ' FPS '
-						+ (modelRenderer.isGravityActive === true ? ', gravity mode' : 'drag mode'));
+				var orientation = modelRenderer.orientation;
+				if (Options.GRAVITY_ACTIVE) {
+					var b = Math.round(modelRenderer.beta);
+					var g = Math.round(modelRenderer.gamma);
+					modelRenderer.setStatusLineText(orientation + ', gravity mode, β=' + b + '°, γ=' + g + '°');
+				} else {
+					var forceX = modelRenderer.forceX;
+					var forceY = modelRenderer.forceY;
+					modelRenderer.setStatusLineText(orientation + ', drag mode, Fx=' + forceX + ', Fy=' + -forceY);
+				}
 			}
 		}
 
@@ -214,7 +228,7 @@
 					beta = -temp;
 				}
 
-				if (initReady && modelRenderer.isGravityActive) {
+				if (initReady && Options.GRAVITY_ACTIVE) {
 					modelRenderer.beta = beta;
 					modelRenderer.gamma = gamma;
 					window.updateForces();
@@ -223,28 +237,22 @@
 		}
 		window.addEventListener('deviceorientation', deviceorientation, false);
 
+
+
+		function isGravityActive() {
+			return '' + Options.GRAVITY_ACTIVE;
+		}
+
+		function getSelecedNodeId() {
+			return '' + modelRenderer.selecedNodeId;
+		}	
+		
 		function getBeta() {
 			return '' + modelRenderer.beta;
 		}
 
 		function getGamma() {
 			return '' + modelRenderer.gamma;
-		}
-
-		function isGravityActive() {
-			return '' + modelRenderer.isGravityActive;
-		}
-
-		function selecedNodeId() {
-			return '' + modelRenderer.selecedNodeId;
-		}
-
-		function setBeta(value) {
-			modelRenderer.beta = value;
-		}
-
-		function setGamma(value) {
-			modelRenderer.gamma = value;
 		}
 
 		function getForceX() {
@@ -256,11 +264,7 @@
 		}
 
 		function getModelName() {
-			return '' + modelRenderer.modelName;
-		}
-
-		function setGravityActive(value) {
-			modelRenderer.isGravityActive = value;
+			return '' + Options.MODEL_NAME;
 		}
 
 		window.addEventListener("resize", checkOrientation, false);
