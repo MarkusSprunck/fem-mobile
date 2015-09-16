@@ -31,28 +31,26 @@ function renderOptionsDefinition() {
 	"use strict";
 	return {
 		MODEL_NAME : "Beam",
-		GRAVITY_ACTIVE : true
+		GRAVITY_ACTIVE : false,
+		BETA : -25.0,
+		GAMMA : 0.0,
+		SCALE_FORCE : 0.02,
+		SCALE_DISPLACEMENT : 25.0
 	};
 }
 var Options = renderOptionsDefinition();
 
 function ModelRenderer() {
 
-	// Parameter for legend
-	this.scalaNumber = 25.0;
+	// Parameter for color legend
 	this.scala_size_x = 15;
 	this.scala_size_y = 395;
-	this.offset_x_scala = 0.0;
+	this.offset_x_scala = 10.0;
 	this.offset_y_scala = 80.0;
 
 	this.offset_x = 100;
 	this.offset_y = 500;
 
-	this.factorForce = 0.01;
-	this.factorDisplacement = 0.1;
-
-	this.beta = 0.0;
-	this.gamma = 0.0;
 	this.forceX = 0.0;
 	this.forceY = 0.0;
 	this.selecedNodeId = null;
@@ -67,8 +65,6 @@ function ModelRenderer() {
 	this.minColor = 20;
 	this.maxColor = -20;
 
-	this.showDeltaX = false;
-
 	this.graphic = document.getElementById("mySVGGui");
 	this.mouseDownX = null;
 	this.mouseDownY = null;
@@ -80,8 +76,6 @@ function ModelRenderer() {
 		event.preventDefault();
 		_that.mouseDownX = null;
 		_that.mouseDownY = null;
-		_that.beta = 0.0;
-		_that.gamma = 0.0;
 		_that.getCircleElementSVG(_that.selecedNodeId, "svgNodes").setAttribute('style', "opacity:0.0");
 		_that.selecedNodeId = null;
 		_that.activeNodeId = null;
@@ -131,10 +125,11 @@ function ModelRenderer() {
 	}
 
 	ModelRenderer.prototype.draw_scala_color = function() {
-		var delta_y = this.scala_size_y / this.scalaNumber;
+		var scalaNumber = 25.0;
+		var delta_y = this.scala_size_y / scalaNumber;
 
-		for (var index = 0; index <= this.scalaNumber; index++) {
-			var value = this.maxColor - (this.maxColor - this.minColor) * index / this.scalaNumber;
+		for (var index = 0; index <= scalaNumber; index++) {
+			var value = this.maxColor - (this.maxColor - this.minColor) * index / scalaNumber;
 			var pointsSVG = "";
 			pointsSVG += [ this.offset_x_scala, this.offset_y_scala + (index + 1) * delta_y ].join(',') + ' ';
 			pointsSVG += [ this.offset_x_scala, this.offset_y_scala + index * delta_y ].join(',') + ' ';
@@ -152,7 +147,7 @@ function ModelRenderer() {
 				text.setAttribute('id', "LT1" + index);
 			}
 			text.setAttribute('x', this.offset_x_scala + this.scala_size_x * 4.5);
-			text.setAttribute('y', this.offset_y_scala + (index + 0.75) * this.scala_size_y / this.scalaNumber);
+			text.setAttribute('y', this.offset_y_scala + (index + 0.75) * this.scala_size_y / scalaNumber);
 			text.setAttribute('fill', '#FFFFFF');
 			text.textContent = value.toFixed(4);
 			var svg1 = document.getElementById("svgLegend");
@@ -183,7 +178,7 @@ function ModelRenderer() {
 			text.setAttribute('style', 'text-anchor: start; font-size: 1.4em;');
 			text.setAttribute('fill', '#FFFFFF');
 			text.setAttribute('x', this.offset_x_scala);
-			text.setAttribute('y', 15);
+			text.setAttribute('y', 25);
 			var svg1 = document.getElementById("svgHeadLine");
 			svg1.appendChild(text);
 		}
@@ -196,7 +191,7 @@ function ModelRenderer() {
 			link.setAttribute('style', 'text-anchor: start;');
 			link.setAttribute('fill', '#8181F7');
 			link.setAttribute('x', this.offset_x_scala);
-			link.setAttribute('y', 35);
+			link.setAttribute('y', 45);
 			var svg1 = document.getElementById("svgHeadLineLink");
 			svg1.appendChild(link);
 			link.textContent = "by Markus Sprunck"
@@ -308,8 +303,8 @@ function ModelRenderer() {
 			var deltaX = (this.colorCode == 1) ? nodes[ele][0].x_d : (this.colorCode == 2) ? nodes[ele][0].y_d : nodes[ele][0].deltaArea;
 			for (var nodeId = 0; nodeId < 3; nodeId++) {
 				node = nodes[ele][nodeId];
-				var x = this.offset_x + node.x + node.x_d * this.factorDisplacement;
-				var y = this.offset_y + node.y + node.y_d * this.factorDisplacement;
+				var x = this.offset_x + node.x + node.x_d * Options.SCALE_DISPLACEMENT;
+				var y = this.offset_y + node.y + node.y_d * Options.SCALE_DISPLACEMENT;
 				pointsSVG += [ x, y ].join(',') + ' ';
 				if (node.x_fixed) {
 					this.drawFixedVerticalSVG(x, y, node.id);
@@ -325,8 +320,8 @@ function ModelRenderer() {
 					node.x_force *= -1;
 					node.y_force *= -1;
 				}
-				this.drawVector(x, y, x + node.x_force * this.factorForce, y, true, (node.x_force > 0.0), node.id, isSelectedElement, node.x_fixed);
-				this.drawVector(x, y, x, y + node.y_force * this.factorForce, false, (node.y_force > 0.0), node.id, isSelectedElement, node.y_fixed);
+				this.drawVector(x, y, x + node.x_force * Options.SCALE_FORCE, y, true, (node.x_force > 0.0), node.id, isSelectedElement, node.x_fixed);
+				this.drawVector(x, y, x, y + node.y_force * Options.SCALE_FORCE, false, (node.y_force > 0.0), node.id, isSelectedElement, node.y_fixed);
 
 				// draw node
 				var elementSVG = this.getCircleElementSVG('N' + node.id, "svgNodes");

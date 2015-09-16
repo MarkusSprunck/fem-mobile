@@ -32,7 +32,7 @@
 
 <script type="text/javascript" src="FemMobile/FemMobile.nocache.js"></script>
 <script type="text/javascript" src="rendermodel.js"></script>
-<script type="text/javascript" src="dat.gui.min.js"></script>
+<script type="text/javascript" src="dat.gui.js"></script>
 
 </head>
 
@@ -69,24 +69,6 @@
 			autoPlace : false
 		});
 
-		/** 
-		 * Helper to show frames per seconds.
-		 * source: http://www.html5gamedevs.com/topic/1828-how-to-calculate-fps-in-plain-javascript
-		 */
-		var fps = {
-			startTime : 0,
-			frameNumber : 0,
-			getFPS : function() {
-				this.frameNumber++;
-				var d = new Date().getTime(), currentTime = (d - this.startTime) / 1000, result = this.frameNumber / currentTime;
-				if (currentTime > 1) {
-					this.startTime = new Date().getTime();
-					this.frameNumber = 0;
-				}
-				return result.toFixed(1);
-			}
-		};
-
 		/**
 		 * Called by a timer defined in class Fem_sample.java 
 		 */
@@ -98,9 +80,11 @@
 
 				// Create simple GUI and display for devices without sensor data
 				if (typeof window.orientation === "undefined") {
-					gui.add(modelRenderer, 'beta', -90, 90).step(0.1).name('Rotate X-Axis').listen();
-					gui.add(modelRenderer, 'gamma', -90, 90).step(0.1).name('Rotate Y-Axis').listen();
+					gui.add(Options, 'BETA', -100.0, 100.0).step(0.5).name('Rotate X-Axis').listen();
+					gui.add(Options, 'GAMMA', -100.0, 100.0).step(0.5).name('Rotate Y-Axis').listen();
 				}
+				gui.add(Options, 'SCALE_FORCE', 0.001, 0.1).step(0.001).name('Scale Forces').listen();
+				gui.add(Options, 'SCALE_DISPLACEMENT', 0.0, 100.0).step(1.0).name('Scale Displacements').listen();
 				gui.add(Options, 'MODEL_NAME', [ 'Cantilever', 'Beam', 'Eiffel Tower' ]).name('Model').listen().onChange(function(value) {
 					console.log("MODEL_NAME=" + Options.MODEL_NAME);
 
@@ -132,9 +116,9 @@
 				}).name('Color Code');
 
 				gui.add(Options, 'GRAVITY_ACTIVE').name('Gravity').listen().onChange(function(value) {
-					if (!value) {
-						modelRenderer.beta = 0.0;
-						modelRenderer.gamma = 0.0;
+					if (Options.GRAVITY_ACTIVE) {
+						Options.BETA = -25.0;
+						Options.GAMMA = 0.0;
 					}
 				});
 
@@ -151,8 +135,8 @@
 				// Update statusline
 				var orientation = modelRenderer.orientation;
 				if (Options.GRAVITY_ACTIVE) {
-					var b = Math.round(modelRenderer.beta);
-					var g = Math.round(modelRenderer.gamma);
+					var b = Math.round(Options.BETA);
+					var g = Math.round(Options.GAMMA);
 					modelRenderer.setStatusLineText(orientation + ', gravity mode, β=' + b + '°, γ=' + g + '°');
 				} else {
 					var forceX = modelRenderer.forceX;
@@ -229,15 +213,13 @@
 				}
 
 				if (initReady && Options.GRAVITY_ACTIVE) {
-					modelRenderer.beta = beta;
-					modelRenderer.gamma = gamma;
+					Options.BETA = beta;
+					Options.GAMMA = gamma;
 					window.updateForces();
 				}
 			}
 		}
 		window.addEventListener('deviceorientation', deviceorientation, false);
-
-
 
 		function isGravityActive() {
 			return '' + Options.GRAVITY_ACTIVE;
@@ -245,14 +227,14 @@
 
 		function getSelecedNodeId() {
 			return '' + modelRenderer.selecedNodeId;
-		}	
-		
+		}
+
 		function getBeta() {
-			return '' + modelRenderer.beta;
+			return '' + Options.BETA;
 		}
 
 		function getGamma() {
-			return '' + modelRenderer.gamma;
+			return '' + Options.GAMMA;
 		}
 
 		function getForceX() {
