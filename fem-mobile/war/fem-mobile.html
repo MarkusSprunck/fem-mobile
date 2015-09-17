@@ -48,8 +48,7 @@
   		 <g id="svgLegend" />
   		 <g id="svgStatusLine" />
   		 <g id="svgHeadLine">
-	     <a xlink:href="https://plus.google.com/u/0/117292523089281814301?rel=author"
-			id="svgHeadLineLink"> </a></g>
+	     <a href="https://plus.google.com/u/0/117292523089281814301?rel=author" id="svgHeadLineLink"> </a></g>
 		 <g id="svgForce" />  	 	 
 		</svg>
 
@@ -80,13 +79,13 @@
 
 				// Create simple GUI and display for devices without sensor data
 				if (typeof window.orientation === "undefined") {
-					gui.add(Options, 'BETA', -100.0, 100.0).step(0.5).name('Rotate X-Axis').listen();
-					gui.add(Options, 'GAMMA', -100.0, 100.0).step(0.5).name('Rotate Y-Axis').listen();
+					gui.add(OPTIONS, 'BETA', -100.0, 100.0).step(0.5).name('Rotate X-Axis').listen();
+					gui.add(OPTIONS, 'GAMMA', -100.0, 100.0).step(0.5).name('Rotate Y-Axis').listen();
 				}
-				gui.add(Options, 'SCALE_FORCE', 0.001, 0.1).step(0.001).name('Scale Forces').listen();
-				gui.add(Options, 'SCALE_DISPLACEMENT', 0.0, 100.0).step(1.0).name('Scale Displacements').listen();
-				gui.add(Options, 'MODEL_NAME', [ 'Cantilever', 'Beam', 'Eiffel Tower' ]).name('Model').listen().onChange(function(value) {
-					console.log("MODEL_NAME=" + Options.MODEL_NAME);
+				gui.add(OPTIONS, 'SCALE_FORCE', 0.001, 0.1).step(0.001).name('Scale Forces').listen();
+				gui.add(OPTIONS, 'SCALE_DISPLACEMENT', 0.0, 100.0).step(1.0).name('Scale Displacements').listen();
+				gui.add(OPTIONS, 'MODEL_NAME', [ 'Cantilever', 'Beam', 'Eiffel Tower' ]).name('Model').listen().onChange(function(value) {
+					console.log("MODEL_NAME=" + OPTIONS.MODEL_NAME);
 
 					var myNode = document.getElementById('svgElements');
 					while (myNode.firstChild) {
@@ -107,20 +106,26 @@
 					while (myNode.firstChild) {
 						myNode.removeChild(myNode.firstChild);
 					}
+
+					var myNode = document.getElementById('svgLegend');
+					while (myNode.firstChild) {
+						myNode.removeChild(myNode.firstChild);
+					}
+
 				});
 
 				gui.add(modelRenderer, 'colorCode', {
 					X : 1,
-					Y : 2,
-					Area : 3
+					Y : 2
 				}).name('Color Code');
 
-				gui.add(Options, 'GRAVITY_ACTIVE').name('Gravity').listen().onChange(function(value) {
-					if (Options.GRAVITY_ACTIVE) {
-						Options.BETA = -25.0;
-						Options.GAMMA = 0.0;
+				gui.add(OPTIONS, 'GRAVITY_ACTIVE').name('Gravity').listen().onChange(function(value) {
+					if (OPTIONS.GRAVITY_ACTIVE) {
+						OPTIONS.BETA = -25.0;
+						OPTIONS.GAMMA = 0.0;
 					}
 				});
+				gui.close();
 
 				var element = document.getElementById('datgui');
 				element.appendChild(gui.domElement);
@@ -133,15 +138,14 @@
 				modelRenderer.renderModel(model);
 
 				// Update statusline
-				var orientation = modelRenderer.orientation;
-				if (Options.GRAVITY_ACTIVE) {
-					var b = Math.round(Options.BETA);
-					var g = Math.round(Options.GAMMA);
-					modelRenderer.setStatusLineText(orientation + ', gravity mode, β=' + b + '°, γ=' + g + '°');
+				if (OPTIONS.GRAVITY_ACTIVE) {
+					var b = Math.round(OPTIONS.BETA);
+					var g = Math.round(OPTIONS.GAMMA);
+					modelRenderer.setStatusLineText(OPTIONS.ORIENTATION + ', gravity mode, β=' + b + '°, γ=' + g + '°');
 				} else {
 					var forceX = modelRenderer.forceX;
 					var forceY = modelRenderer.forceY;
-					modelRenderer.setStatusLineText(orientation + ', drag mode, Fx=' + forceX + ', Fy=' + -forceY);
+					modelRenderer.setStatusLineText(OPTIONS.ORIENTATION + ', drag mode, Fx=' + forceX + ', Fy=' + -forceY);
 				}
 			}
 		}
@@ -156,23 +160,23 @@
 				var isAndroid = ua.indexOf("android") > -1;
 				if (isAndroid) {
 					if (!previousOrientation || previousOrientation === 90) {
-						modelRenderer.orientation = 'Normal portrait';
+						OPTIONS.ORIENTATION = 'Normal portrait';
 					} else if (previousOrientation === 0) {
-						modelRenderer.orientation = 'Landscape, rotated clockwise';
+						OPTIONS.ORIENTATION = 'Landscape, rotated clockwise';
 					} else if (previousOrientation === 180) {
-						modelRenderer.orientation = 'Landscape, rotated counterclockwise';
+						OPTIONS.ORIENTATION = 'Landscape, rotated counterclockwise';
 					} else if (previousOrientation === -90) {
-						modelRenderer.orientation = 'Portrait, upside down';
+						OPTIONS.ORIENTATION = 'Portrait, upside down';
 					}
 				} else {
 					if (!previousOrientation || previousOrientation === 0) {
-						modelRenderer.orientation = 'Normal portrait';
+						OPTIONS.ORIENTATION = 'Normal portrait';
 					} else if (previousOrientation === -90) {
-						modelRenderer.orientation = 'Landscape, rotated clockwise';
+						OPTIONS.ORIENTATION = 'Landscape, rotated clockwise';
 					} else if (previousOrientation === 90) {
-						modelRenderer.orientation = 'Landscape, rotated counterclockwise';
+						OPTIONS.ORIENTATION = 'Landscape, rotated counterclockwise';
 					} else if (previousOrientation === 180) {
-						modelRenderer.orientation = 'Portrait, upside down';
+						OPTIONS.ORIENTATION = 'Portrait, upside down';
 					}
 				}
 			}
@@ -192,16 +196,16 @@
 			if (typeof modelRenderer !== "undefined") {
 				var beta;
 				var gamma;
-				if (modelRenderer.orientation == 'Normal portrait') {
+				if (OPTIONS.ORIENTATION == 'Normal portrait') {
 					beta = -eventData.beta;
 					gamma = -eventData.gamma;
-				} else if (modelRenderer.orientation == 'Landscape, rotated clockwise') {
+				} else if (OPTIONS.ORIENTATION == 'Landscape, rotated clockwise') {
 					beta = -eventData.gamma;
 					gamma = eventData.beta;
-				} else if (modelRenderer.orientation == 'Landscape, rotated counterclockwise') {
+				} else if (OPTIONS.ORIENTATION == 'Landscape, rotated counterclockwise') {
 					beta = eventData.gamma;
 					gamma = -eventData.beta;
-				} else if (modelRenderer.orientation == 'Portrait, upside down') {
+				} else if (OPTIONS.ORIENTATION == 'Portrait, upside down') {
 					beta = eventData.beta;
 					gamma = eventData.gamma;
 				}
@@ -212,17 +216,19 @@
 					beta = -temp;
 				}
 
-				if (initReady && Options.GRAVITY_ACTIVE) {
-					Options.BETA = beta;
-					Options.GAMMA = gamma;
+				if (initReady && OPTIONS.GRAVITY_ACTIVE) {
+					OPTIONS.BETA = beta;
+					OPTIONS.GAMMA = gamma;
 					window.updateForces();
 				}
 			}
 		}
 		window.addEventListener('deviceorientation', deviceorientation, false);
+		window.addEventListener("resize", checkOrientation, false);
+		window.addEventListener("orientationchange", checkOrientation, false);
 
 		function isGravityActive() {
-			return '' + Options.GRAVITY_ACTIVE;
+			return '' + OPTIONS.GRAVITY_ACTIVE;
 		}
 
 		function getSelecedNodeId() {
@@ -230,11 +236,11 @@
 		}
 
 		function getBeta() {
-			return '' + Options.BETA;
+			return '' + OPTIONS.BETA;
 		}
 
 		function getGamma() {
-			return '' + Options.GAMMA;
+			return '' + OPTIONS.GAMMA;
 		}
 
 		function getForceX() {
@@ -246,11 +252,8 @@
 		}
 
 		function getModelName() {
-			return '' + Options.MODEL_NAME;
+			return '' + OPTIONS.MODEL_NAME;
 		}
-
-		window.addEventListener("resize", checkOrientation, false);
-		window.addEventListener("orientationchange", checkOrientation, false);
 	</script>
 
 </body>

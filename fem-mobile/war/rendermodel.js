@@ -27,92 +27,91 @@
  * 
  * 
  */
-function renderOptionsDefinition() {
+
+var OPTIONS = function optionsModelRenderer() {
 	"use strict";
 	return {
-		MODEL_NAME : "Beam",
+		MODEL_NAME : 'Beam',
 		GRAVITY_ACTIVE : false,
 		BETA : -25.0,
 		GAMMA : 0.0,
-		SCALE_FORCE : 0.02,
-		SCALE_DISPLACEMENT : 25.0
+		SCALE_FORCE : 0.005,
+		SCALE_DISPLACEMENT : 1.0,
+		ORIENTATION : 'Normal portrait'
 	};
-}
-var Options = renderOptionsDefinition();
+}();
 
 function ModelRenderer() {
 
-	// Parameter for color legend
-	this.scala_size_x = 15;
-	this.scala_size_y = 395;
-	this.offset_x_scala = 10.0;
-	this.offset_y_scala = 80.0;
-
-	this.offset_x = 100;
-	this.offset_y = 500;
-
+	// Create force by drag with mouse
 	this.forceX = 0.0;
 	this.forceY = 0.0;
 	this.selecedNodeId = null;
 	this.selecedNodeIdLast = null;
 	this.activeNodeId = null;
+	this.mouseDownX = null;
+	this.mouseDownY = null;
+
+	// Parameter for color legend
 	this.colorCode = 1;
-
-	this.rotate = false;
-	this.display_scale = true;
-	this.orientation = 'Normal portrait';
-
 	this.minColor = 20;
 	this.maxColor = -20;
 
 	this.graphic = document.getElementById("mySVGGui");
-	this.mouseDownX = null;
-	this.mouseDownY = null;
 
-	var _that = this;
+	ModelRenderer.prototype.renderModel = function(model) {
 
-	// Handle start
-	var dragEndHandler = function(event) {
-		event.preventDefault();
-		_that.mouseDownX = null;
-		_that.mouseDownY = null;
-		_that.getCircleElementSVG(_that.selecedNodeId, "svgNodes").setAttribute('style', "opacity:0.0");
-		_that.selecedNodeId = null;
-		_that.activeNodeId = null;
-	}
-	this.graphic.addEventListener('mouseup', dragEndHandler, false);
-	this.graphic.addEventListener('touchend', dragEndHandler, false);
+		var offset_x = 150;
+		var offset_y = 500;
 
-	// Handle move
-	var dragHandler = function(event) {
-		event.preventDefault();
-		var isVisible = _that.selecedNodeId != null;
-		if (isVisible) {
+		// render model
+		for (var ele = model.length - 1; ele >= 0; ele--) {
 			var pointsSVG = "";
-			var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
-			var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
-			if (!Options.GRAVITY_ACTIVE) {
-				var factor = 1;
-				_that.forceY = (y2 - _that.mouseDownY) * factor;
-				_that.forceX = (x2 - _that.mouseDownX) * factor;
+			var node = null;
+			var deltaX = (this.colorCode == 1) ? model[ele][0].x_d : model[ele][0].y_d;
+			for (var nodeId = 0; nodeId < 3; nodeId++) {
+				node = model[ele][nodeId];
+				var x = offset_x + node.x + node.x_d * OPTIONS.SCALE_DISPLACEMENT;
+				var y = offset_y + node.y + node.y_d * OPTIONS.SCALE_DISPLACEMENT;
+				pointsSVG += [ x, y ].join(',') + ' ';
+				if (node.x_fixed) {
+					this.drawFixedVerticalSVG(x, y, node.id);
+				}
+				if (node.y_fixed) {
+					this.drawFixedHorizontalSVG(x, y, node.id);
+				}
+
+				var isSelectedElement = !OPTIONS.GRAVITY_ACTIVE && ('N' + (node.id)) == this.selecedNodeId;
+				this.drawVector(x, y, x + node.x_force * OPTIONS.SCALE_FORCE, y, true, (node.x_force > 0.0), node.id, isSelectedElement, node.x_fixed);
+				this.drawVector(x, y, x, y + node.y_force * OPTIONS.SCALE_FORCE, false, (node.y_force > 0.0), node.id, isSelectedElement, node.y_fixed);
+
+				// draw node
+				var elementSVG = this.getCircleElementSVG('N' + node.id, "svgNodes");
+				if (null != elementSVG) {
+					elementSVG.setAttribute('cx', x);
+					elementSVG.setAttribute('cy', y);
+					elementSVG.setAttribute('r', 4);
+				}
+
+			}
+			var id = 'E' + node.idElement;
+			var elementSVG = this.getPolygonElementSVG(id, "svgElements");
+			if (null != elementSVG) {
+				elementSVG.setAttribute('points', pointsSVG.trim());
+				elementSVG.setAttribute('style', "fill:" + this.getColor(deltaX) + ";");
 			}
 		}
-
-		var elementSVG = _that.getCircleElementSVG(_that.activeNodeId, "svgNodes");
-		if (event.target.id != _that.activeNodeId && !isVisible) {
-			elementSVG.setAttribute('style', "opacity: 0.0");
-			_that.activeNodeId = null;
-		}
-
+		this.draw_scala_color();
 	}
-	this.graphic.addEventListener('mousemove', dragHandler, false);
-	this.graphic.addEventListener('touchmove', dragHandler, false);
 
 	ModelRenderer.prototype.toDegrees = function(angle) {
 		return angle * (180 / Math.PI);
 	}
 
 	ModelRenderer.prototype.getColor = function(mean) {
+		var toHex = function(n) {
+			return "0123456789ABCDEF".charAt((n - n % 16) / 16) + "0123456789ABCDEF".charAt(n % 16);
+		}
 		mean = -1.8 * Math.PI / (this.maxColor - this.minColor) * mean;
 		red = Math.sin(mean + 2) * 127 + 128;
 		green = Math.sin(mean + 1) * 127 + 128;
@@ -120,21 +119,21 @@ function ModelRenderer() {
 		return '#' + toHex(red) + toHex(green) + toHex(blue);
 	}
 
-	function toHex(n) {
-		return "0123456789ABCDEF".charAt((n - n % 16) / 16) + "0123456789ABCDEF".charAt(n % 16);
-	}
-
 	ModelRenderer.prototype.draw_scala_color = function() {
-		var scalaNumber = 25.0;
-		var delta_y = this.scala_size_y / scalaNumber;
+		var scalaNumber = 25;
+		var offset_x_scala = 10;
+		var offset_y_scala = 80;
+		var scala_size_x = 15;
+		var scala_size_y = 395;
+		var delta_y = scala_size_y / scalaNumber;
 
 		for (var index = 0; index <= scalaNumber; index++) {
 			var value = this.maxColor - (this.maxColor - this.minColor) * index / scalaNumber;
 			var pointsSVG = "";
-			pointsSVG += [ this.offset_x_scala, this.offset_y_scala + (index + 1) * delta_y ].join(',') + ' ';
-			pointsSVG += [ this.offset_x_scala, this.offset_y_scala + index * delta_y ].join(',') + ' ';
-			pointsSVG += [ this.offset_x_scala + this.scala_size_x, this.offset_y_scala + index * delta_y ].join(',') + ' ';
-			pointsSVG += [ this.offset_x_scala + this.scala_size_x, this.offset_y_scala + (index + 1) * delta_y ].join(',') + ' ';
+			pointsSVG += [ offset_x_scala, offset_y_scala + (index + 1) * delta_y ].join(',') + ' ';
+			pointsSVG += [ offset_x_scala, offset_y_scala + index * delta_y ].join(',') + ' ';
+			pointsSVG += [ offset_x_scala + scala_size_x, offset_y_scala + index * delta_y ].join(',') + ' ';
+			pointsSVG += [ offset_x_scala + scala_size_x, offset_y_scala + (index + 1) * delta_y ].join(',') + ' ';
 			var elementSVG = this.getPolygonElementSVG(index, "svgLegend");
 			if (null != elementSVG) {
 				elementSVG.setAttribute('points', pointsSVG.trim());
@@ -146,10 +145,10 @@ function ModelRenderer() {
 				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 				text.setAttribute('id', "LT1" + index);
 			}
-			text.setAttribute('x', this.offset_x_scala + this.scala_size_x * 4.5);
-			text.setAttribute('y', this.offset_y_scala + (index + 0.75) * this.scala_size_y / scalaNumber);
+			text.setAttribute('x', offset_x_scala + scala_size_x * 6.5);
+			text.setAttribute('y', offset_y_scala + (index + 0.75) * scala_size_y / scalaNumber);
 			text.setAttribute('fill', '#FFFFFF');
-			text.textContent = value.toFixed(4);
+			text.textContent = value.toFixed(4) + ' mm';
 			var svg1 = document.getElementById("svgLegend");
 			svg1.appendChild(text);
 		}
@@ -162,8 +161,8 @@ function ModelRenderer() {
 			text.setAttribute('id', "SL1");
 			text.setAttribute('style', 'text-anchor: start;');
 			text.setAttribute('fill', '#FFFFFF');
-			text.setAttribute('x', this.offset_x_scala);
-			text.setAttribute('y', this.offset_y + 60);
+			text.setAttribute('x', 10);
+			text.setAttribute('y', 600);
 			var svg1 = document.getElementById("svgStatusLine");
 			svg1.appendChild(text);
 		}
@@ -177,7 +176,7 @@ function ModelRenderer() {
 			text.setAttribute('id', "TI1");
 			text.setAttribute('style', 'text-anchor: start; font-size: 1.4em;');
 			text.setAttribute('fill', '#FFFFFF');
-			text.setAttribute('x', this.offset_x_scala);
+			text.setAttribute('x', 10);
 			text.setAttribute('y', 25);
 			var svg1 = document.getElementById("svgHeadLine");
 			svg1.appendChild(text);
@@ -190,7 +189,7 @@ function ModelRenderer() {
 			link.setAttribute('id', "SL2");
 			link.setAttribute('style', 'text-anchor: start;');
 			link.setAttribute('fill', '#8181F7');
-			link.setAttribute('x', this.offset_x_scala);
+			link.setAttribute('x', 10);
 			link.setAttribute('y', 45);
 			var svg1 = document.getElementById("svgHeadLineLink");
 			svg1.appendChild(link);
@@ -226,7 +225,7 @@ function ModelRenderer() {
 				_that.mouseDownY = event.clientY;
 				_that.selecedNodeIdLast = _that.selecedNodeId;
 				_that.selecedNodeId = event.target.id;
-				Options.GRAVITY_ACTIVE = false;
+				OPTIONS.GRAVITY_ACTIVE = false;
 			}, false);
 			elementSVG.addEventListener('touchstart', function(event) {
 				event.preventDefault();
@@ -234,7 +233,7 @@ function ModelRenderer() {
 				_that.mouseDownY = event.touches[0].clientY;
 				_that.selecedNodeIdLast = _that.selecedNodeId;
 				_that.selecedNodeId = event.target.id;
-				Options.GRAVITY_ACTIVE = false;
+				OPTIONS.GRAVITY_ACTIVE = false;
 			}, false);
 
 			elementSVG.addEventListener('mousemove', function(event) {
@@ -286,63 +285,12 @@ function ModelRenderer() {
 		this.minColor = 250.0;
 		this.maxColor = -250.0;
 		for (var ele = nodes.length - 1; ele >= 0; ele--) {
-			var deltaX = (this.colorCode == 1) ? nodes[ele][0].x_d : (this.colorCode == 2) ? -nodes[ele][0].y_d : nodes[ele][0].deltaArea;
+			var deltaX = (this.colorCode == 1) ? nodes[ele][0].x_d : -nodes[ele][0].y_d;
 			this.minColor = Math.min(deltaX, this.minColor);
 			this.maxColor = Math.max(deltaX, this.maxColor);
 		}
 		this.minColor = Math.min(this.minColor, -0.0001);
 		this.maxColor = Math.max(this.maxColor, 0.0001);
-	}
-
-	ModelRenderer.prototype.renderModel = function(nodes) {
-
-		// render nodes
-		for (var ele = nodes.length - 1; ele >= 0; ele--) {
-			var pointsSVG = "";
-			var node = null;
-			var deltaX = (this.colorCode == 1) ? nodes[ele][0].x_d : (this.colorCode == 2) ? nodes[ele][0].y_d : nodes[ele][0].deltaArea;
-			for (var nodeId = 0; nodeId < 3; nodeId++) {
-				node = nodes[ele][nodeId];
-				var x = this.offset_x + node.x + node.x_d * Options.SCALE_DISPLACEMENT;
-				var y = this.offset_y + node.y + node.y_d * Options.SCALE_DISPLACEMENT;
-				pointsSVG += [ x, y ].join(',') + ' ';
-				if (node.x_fixed) {
-					this.drawFixedVerticalSVG(x, y, node.id);
-				}
-				if (node.y_fixed) {
-					this.drawFixedHorizontalSVG(x, y, node.id);
-				}
-
-				var isSelectedElement = !Options.GRAVITY_ACTIVE && ('N' + (node.id)) == this.selecedNodeId;
-				// TODO: this is a workaround to show the forces in a correct
-				// way
-				if (isSelectedElement && Options.MODEL_NAME === "Eiffel Tower") {
-					node.x_force *= -1;
-					node.y_force *= -1;
-				}
-				this.drawVector(x, y, x + node.x_force * Options.SCALE_FORCE, y, true, (node.x_force > 0.0), node.id, isSelectedElement, node.x_fixed);
-				this.drawVector(x, y, x, y + node.y_force * Options.SCALE_FORCE, false, (node.y_force > 0.0), node.id, isSelectedElement, node.y_fixed);
-
-				// draw node
-				var elementSVG = this.getCircleElementSVG('N' + node.id, "svgNodes");
-				if (null != elementSVG) {
-					elementSVG.setAttribute('cx', x);
-					elementSVG.setAttribute('cy', y);
-					elementSVG.setAttribute('r', 4);
-				}
-
-			}
-			var id = 'E' + node.idElement;
-			var elementSVG = this.getPolygonElementSVG(id, "svgElements");
-			if (null != elementSVG) {
-				elementSVG.setAttribute('points', pointsSVG.trim());
-				elementSVG.setAttribute('style', "fill:" + this.getColor(deltaX) + ";");
-			}
-		}
-
-		if (this.display_scale) {
-			this.draw_scala_color();
-		}
 	}
 
 	ModelRenderer.prototype.drawVector = function(startX, startY, endX, endY, horizontal, positive, ele, isSelectedElement, isFixedNode) {
@@ -383,5 +331,41 @@ function ModelRenderer() {
 			elementSVG.setAttribute('style', "stroke:#FF0000;stroke-width: 1.0; visibility:" + ((isVisible) ? "visible" : "hidden"));
 		}
 	}
+
+	// Create force by drag with mouse - handle start
+	var _that = this;
+	var dragEndHandler = function(event) {
+		event.preventDefault();
+		_that.mouseDownX = null;
+		_that.mouseDownY = null;
+		_that.getCircleElementSVG(_that.selecedNodeId, "svgNodes").setAttribute('style', "opacity:0.0");
+		_that.selecedNodeId = null;
+		_that.activeNodeId = null;
+	}
+	this.graphic.addEventListener('mouseup', dragEndHandler, false);
+	this.graphic.addEventListener('touchend', dragEndHandler, false);
+
+	// Create force by drag with mouse - handle move
+	var dragHandler = function(event) {
+		event.preventDefault();
+		var isVisible = _that.selecedNodeId != null;
+		if (isVisible) {
+			var pointsSVG = "";
+			var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
+			var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
+			if (!OPTIONS.GRAVITY_ACTIVE) {
+				var factor = 1;
+				_that.forceY = (y2 - _that.mouseDownY) * factor;
+				_that.forceX = (x2 - _that.mouseDownX) * factor;
+			}
+		}
+		var elementSVG = _that.getCircleElementSVG(_that.activeNodeId, "svgNodes");
+		if (event.target.id != _that.activeNodeId && !isVisible) {
+			elementSVG.setAttribute('style', "opacity: 0.0");
+			_that.activeNodeId = null;
+		}
+	}
+	this.graphic.addEventListener('mousemove', dragHandler, false);
+	this.graphic.addEventListener('touchmove', dragHandler, false);
 
 }

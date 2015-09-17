@@ -492,7 +492,7 @@ public class BandMatrixFullTest {
 		for (int i = 0; i < forcesCalculated.getMaxRows(); i++) {
 			final double valueExpected = inputForces.getValue(i);
 			if (valueExpected > 0.0 || valueExpected < 0.0) {
-				Assert.assertEquals(1.0, forcesCalculated.getValue(i) / valueExpected, 1E-4);
+				Assert.assertEquals(1.0, forcesCalculated.getValue(i) / valueExpected, 1E-3);
 			}
 		}
 	}
