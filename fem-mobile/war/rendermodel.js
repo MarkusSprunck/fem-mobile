@@ -31,7 +31,7 @@
 var OPTIONS = function optionsModelRenderer() {
 	"use strict";
 	return {
-		MODEL_NAME : 'Eiffel Tower',
+		MODEL_NAME : 'Beam',
 		GRAVITY_ACTIVE : true,
 		BETA : 0.0,
 		GAMMA : 0.0,
