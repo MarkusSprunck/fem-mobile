@@ -32,8 +32,8 @@ var OPTIONS = function optionsModelRenderer() {
 	"use strict";
 	return {
 		MODEL_NAME : 'Beam',
-		GRAVITY_ACTIVE : false,
-		BETA : -25.0,
+		GRAVITY_ACTIVE : true,
+		BETA : 0.0,
 		GAMMA : 0.0,
 		SCALE_FORCE : 0.005,
 		SCALE_DISPLACEMENT : 1.0,
@@ -59,49 +59,113 @@ function ModelRenderer() {
 
 	this.graphic = document.getElementById("mySVGGui");
 
-	ModelRenderer.prototype.renderModel = function(model) {
-
-		var offset_x = 150;
-		var offset_y = 500;
-
-		// render model
-		for (var ele = model.length - 1; ele >= 0; ele--) {
-			var pointsSVG = "";
-			var node = null;
-			var deltaX = (this.colorCode == 1) ? model[ele][0].x_d : model[ele][0].y_d;
+	ModelRenderer.prototype.renderModel = function(model, offset_x, offset_y) {
+		var x, y = 0.0;
+		var points = "";
+		var node = null;
+		var element = null;
+		for (var ele = model.length - 1; ele >= 0; ele--, points = "") {
+			element = model[ele];
+			var delta = (this.colorCode == 1) ? model[ele][0].x_d : model[ele][0].y_d;
 			for (var nodeId = 0; nodeId < 3; nodeId++) {
-				node = model[ele][nodeId];
-				var x = offset_x + node.x + node.x_d * OPTIONS.SCALE_DISPLACEMENT;
-				var y = offset_y + node.y + node.y_d * OPTIONS.SCALE_DISPLACEMENT;
-				pointsSVG += [ x, y ].join(',') + ' ';
-				if (node.x_fixed) {
-					this.drawFixedVerticalSVG(x, y, node.id);
-				}
-				if (node.y_fixed) {
-					this.drawFixedHorizontalSVG(x, y, node.id);
-				}
+				// get node and location
+				node = element[nodeId];
+				x = offset_x + node.x + node.x_d * OPTIONS.SCALE_DISPLACEMENT;
+				y = offset_y + node.y + node.y_d * OPTIONS.SCALE_DISPLACEMENT;
 
-				var isSelectedElement = !OPTIONS.GRAVITY_ACTIVE && ('N' + (node.id)) == this.selecedNodeId;
-				this.drawVector(x, y, x + node.x_force * OPTIONS.SCALE_FORCE, y, true, (node.x_force > 0.0), node.id, isSelectedElement, node.x_fixed);
-				this.drawVector(x, y, x, y + node.y_force * OPTIONS.SCALE_FORCE, false, (node.y_force > 0.0), node.id, isSelectedElement, node.y_fixed);
+				// add this node to path for element
+				points += [ x, y ].join(',') + ' ';
 
-				// draw node
-				var elementSVG = this.getCircleElementSVG('N' + node.id, "svgNodes");
-				if (null != elementSVG) {
-					elementSVG.setAttribute('cx', x);
-					elementSVG.setAttribute('cy', y);
-					elementSVG.setAttribute('r', 4);
-				}
-
+				this.renderFixtures(node, x, y);
+				this.renderForces(node, x, y);
+				this.renderNode(node, x, y);
 			}
-			var id = 'E' + node.idElement;
-			var elementSVG = this.getPolygonElementSVG(id, "svgElements");
+			this.renderElement(node, points, delta);
+		}
+	}
+
+	ModelRenderer.prototype.renderColorScala = function() {
+		var scalaNumber = 25;
+		var offset_x_scala = 10;
+		var offset_y_scala = 80;
+		var scala_size_x = 15;
+		var scala_size_y = 395;
+		var delta_y = scala_size_y / scalaNumber;
+
+		for (var index = 0; index <= scalaNumber; index++) {
+			var value = this.maxColor - (this.maxColor - this.minColor) * index / scalaNumber;
+			var cubePoints = "";
+			cubePoints += [ offset_x_scala, offset_y_scala + (index + 1) * delta_y ].join(',') + ' ';
+			cubePoints += [ offset_x_scala, offset_y_scala + index * delta_y ].join(',') + ' ';
+			cubePoints += [ offset_x_scala + scala_size_x, offset_y_scala + index * delta_y ].join(',') + ' ';
+			cubePoints += [ offset_x_scala + scala_size_x, offset_y_scala + (index + 1) * delta_y ].join(',') + ' ';
+			var elementSVG = this.getPolygonElementSVG(index, "svgLegend");
 			if (null != elementSVG) {
-				elementSVG.setAttribute('points', pointsSVG.trim());
-				elementSVG.setAttribute('style', "fill:" + this.getColor(deltaX) + ";");
+				elementSVG.setAttribute('points', cubePoints.trim());
+				elementSVG.setAttribute('style', "fill: " + this.getColor(value) + "; stroke: " + this.getColor(value));
+			}
+
+			var text = document.getElementById("LT1" + index);
+			if (null == text) {
+				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+				text.setAttribute('id', "LT1" + index);
+			}
+			text.setAttribute('x', offset_x_scala + scala_size_x * 5.5);
+			text.setAttribute('y', offset_y_scala + (index + 0.75) * scala_size_y / scalaNumber);
+			text.setAttribute('fill', '#FFFFFF');
+			text.textContent = value.toFixed(2) + ' mm';
+			var svg1 = document.getElementById("svgLegend");
+			svg1.appendChild(text);
+		}
+	}
+
+	ModelRenderer.prototype.renderFixtures = function(node, x, y) {
+		var size = 10;
+		if (node.x_fixed) {
+			var trianglePoints = "";
+			trianglePoints += [ x, y ].join(',') + ' ';
+			trianglePoints += [ x - size, y - size * 0.75 ].join(',') + ' ';
+			trianglePoints += [ x - size, y + size * 0.75 ].join(',') + ' ';
+			var elementSVG = this.getPolygonElementSVG('FIX_V' + node.id, "svgFixed");
+			if (null != elementSVG) {
+				elementSVG.setAttribute('points', trianglePoints.trim());
+				elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.5");
 			}
 		}
-		this.draw_scala_color();
+		if (node.y_fixed) {
+			var trianglePoints = "";
+			trianglePoints += [ x, y ].join(',') + ' ';
+			trianglePoints += [ x + size * 0.75, y + size ].join(',') + ' ';
+			trianglePoints += [ x - size * 0.75, y + size ].join(',') + ' ';
+			var elementSVG = this.getPolygonElementSVG('FIX_H' + node.id, "svgFixed");
+			if (null != elementSVG) {
+				elementSVG.setAttribute('points', trianglePoints.trim());
+				elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.5");
+			}
+		}
+	}
+
+	ModelRenderer.prototype.renderForces = function(node, x, y) {
+		var isSelectedElement = !OPTIONS.GRAVITY_ACTIVE && ('N' + (node.id)) == this.selecedNodeId;
+		this.drawVector(x, y, x + node.x_force * OPTIONS.SCALE_FORCE, y, true, (node.x_force > 0.0), node.id, isSelectedElement, node.x_fixed);
+		this.drawVector(x, y, x, y + node.y_force * OPTIONS.SCALE_FORCE, false, (node.y_force > 0.0), node.id, isSelectedElement, node.y_fixed);
+	}
+
+	ModelRenderer.prototype.renderElement = function(node, elementPoints, delta) {
+		var elementSVG = this.getPolygonElementSVG('E' + node.idElement, "svgElements");
+		if (null != elementSVG) {
+			elementSVG.setAttribute('points', elementPoints.trim());
+			elementSVG.setAttribute('style', "fill:" + this.getColor(delta) + ";");
+		}
+	}
+
+	ModelRenderer.prototype.renderNode = function(node, x, y) {
+		var elementSVG = this.getCircleElementSVG('N' + node.id, "svgNodes");
+		if (null != elementSVG) {
+			elementSVG.setAttribute('cx', x);
+			elementSVG.setAttribute('cy', y);
+			elementSVG.setAttribute('r', 4);
+		}
 	}
 
 	ModelRenderer.prototype.toDegrees = function(angle) {
@@ -117,41 +181,6 @@ function ModelRenderer() {
 		green = Math.sin(mean + 1) * 127 + 128;
 		blue = Math.sin(mean * 1.5 + 4) * 127 + 128;
 		return '#' + toHex(red) + toHex(green) + toHex(blue);
-	}
-
-	ModelRenderer.prototype.draw_scala_color = function() {
-		var scalaNumber = 25;
-		var offset_x_scala = 10;
-		var offset_y_scala = 80;
-		var scala_size_x = 15;
-		var scala_size_y = 395;
-		var delta_y = scala_size_y / scalaNumber;
-
-		for (var index = 0; index <= scalaNumber; index++) {
-			var value = this.maxColor - (this.maxColor - this.minColor) * index / scalaNumber;
-			var pointsSVG = "";
-			pointsSVG += [ offset_x_scala, offset_y_scala + (index + 1) * delta_y ].join(',') + ' ';
-			pointsSVG += [ offset_x_scala, offset_y_scala + index * delta_y ].join(',') + ' ';
-			pointsSVG += [ offset_x_scala + scala_size_x, offset_y_scala + index * delta_y ].join(',') + ' ';
-			pointsSVG += [ offset_x_scala + scala_size_x, offset_y_scala + (index + 1) * delta_y ].join(',') + ' ';
-			var elementSVG = this.getPolygonElementSVG(index, "svgLegend");
-			if (null != elementSVG) {
-				elementSVG.setAttribute('points', pointsSVG.trim());
-				elementSVG.setAttribute('style', "fill: " + this.getColor(value) + "; stroke: " + this.getColor(value));
-			}
-
-			var text = document.getElementById("LT1" + index);
-			if (null == text) {
-				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-				text.setAttribute('id', "LT1" + index);
-			}
-			text.setAttribute('x', offset_x_scala + scala_size_x * 6.5);
-			text.setAttribute('y', offset_y_scala + (index + 0.75) * scala_size_y / scalaNumber);
-			text.setAttribute('fill', '#FFFFFF');
-			text.textContent = value.toFixed(4) + ' mm';
-			var svg1 = document.getElementById("svgLegend");
-			svg1.appendChild(text);
-		}
 	}
 
 	ModelRenderer.prototype.setStatusLineText = function(value) {
@@ -254,33 +283,6 @@ function ModelRenderer() {
 		return elementSVG;
 	}
 
-	ModelRenderer.prototype.drawFixedVerticalSVG = function(x, y, nodeId) {
-		var length = 10;
-		var pointsSVG = "";
-		pointsSVG += [ x, y ].join(',') + ' ';
-		pointsSVG += [ x - length, y - length * 0.75 ].join(',') + ' ';
-		pointsSVG += [ x - length, y + length * 0.75 ].join(',') + ' ';
-		var elementSVG = this.getPolygonElementSVG('FIX_V' + nodeId, "svgFixed");
-		if (null != elementSVG) {
-			elementSVG.setAttribute('points', pointsSVG.trim());
-			elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.5");
-		}
-	}
-
-	ModelRenderer.prototype.drawFixedHorizontalSVG = function(x, y, nodeId) {
-		var length = 10;
-		var pointsSVG = "";
-		pointsSVG += [ x, y ].join(',') + ' ';
-		pointsSVG += [ x + length * 0.75, y + length ].join(',') + ' ';
-		pointsSVG += [ x - length * 0.75, y + length ].join(',') + ' ';
-		var elementSVG = this.getPolygonElementSVG('FIX_H' + nodeId, "svgFixed");
-		if (null != elementSVG) {
-			elementSVG.setAttribute('points', pointsSVG.trim());
-			elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.5");
-		}
-
-	}
-
 	ModelRenderer.prototype.calculateColorRange = function(nodes) {
 		this.minColor = 250.0;
 		this.maxColor = -250.0;
@@ -289,8 +291,8 @@ function ModelRenderer() {
 			this.minColor = Math.min(deltaX, this.minColor);
 			this.maxColor = Math.max(deltaX, this.maxColor);
 		}
-		this.minColor = Math.min(this.minColor, -0.0001);
-		this.maxColor = Math.max(this.maxColor, 0.0001);
+		this.minColor = Math.min(this.minColor, -0.1);
+		this.maxColor = Math.max(this.maxColor, 0.1);
 	}
 
 	ModelRenderer.prototype.drawVector = function(startX, startY, endX, endY, horizontal, positive, ele, isSelectedElement, isFixedNode) {
@@ -298,36 +300,36 @@ function ModelRenderer() {
 		var length = 6;
 		var isVisible = (isFixedNode || isSelectedElement) && (Math.abs(startX - endX) + Math.abs(startY - endY) > length);
 
-		var pointsSVG = "";
+		var arrowPoints = "";
 		if (isVisible) {
-			pointsSVG += [ startX, startY ].join(',') + ' ';
-			pointsSVG += [ endX, endY ].join(',') + ' ';
+			arrowPoints += [ startX, startY ].join(',') + ' ';
+			arrowPoints += [ endX, endY ].join(',') + ' ';
 
 			if (horizontal && !positive) {
-				pointsSVG += [ endX + length, endY - length ].join(',') + ' ';
-				pointsSVG += [ endX, endY ].join(',') + ' ';
-				pointsSVG += [ endX + length, endY + length ].join(',') + ' ';
-				pointsSVG += [ endX, endY ].join(',') + ' ';
+				arrowPoints += [ endX + length, endY - length ].join(',') + ' ';
+				arrowPoints += [ endX, endY ].join(',') + ' ';
+				arrowPoints += [ endX + length, endY + length ].join(',') + ' ';
+				arrowPoints += [ endX, endY ].join(',') + ' ';
 			} else if (horizontal && positive) {
-				pointsSVG += [ endX - length, endY - length ].join(',') + ' ';
-				pointsSVG += [ endX, endY ].join(',') + ' ';
-				pointsSVG += [ endX - length, endY + length ].join(',') + ' ';
-				pointsSVG += [ endX, endY ].join(',') + ' ';
+				arrowPoints += [ endX - length, endY - length ].join(',') + ' ';
+				arrowPoints += [ endX, endY ].join(',') + ' ';
+				arrowPoints += [ endX - length, endY + length ].join(',') + ' ';
+				arrowPoints += [ endX, endY ].join(',') + ' ';
 			} else if (!horizontal && positive) {
-				pointsSVG += [ endX - length, endY - length ].join(',') + ' ';
-				pointsSVG += [ endX, endY ].join(',') + ' ';
-				pointsSVG += [ endX + length, endY - length ].join(',') + ' ';
-				pointsSVG += [ endX, endY ].join(',') + ' ';
+				arrowPoints += [ endX - length, endY - length ].join(',') + ' ';
+				arrowPoints += [ endX, endY ].join(',') + ' ';
+				arrowPoints += [ endX + length, endY - length ].join(',') + ' ';
+				arrowPoints += [ endX, endY ].join(',') + ' ';
 			} else if (!horizontal && !positive) {
-				pointsSVG += [ endX - length, endY + length ].join(',') + ' ';
-				pointsSVG += [ endX, endY ].join(',') + ' ';
-				pointsSVG += [ endX + length, endY + length ].join(',') + ' ';
-				pointsSVG += [ endX, endY ].join(',') + ' ';
+				arrowPoints += [ endX - length, endY + length ].join(',') + ' ';
+				arrowPoints += [ endX, endY ].join(',') + ' ';
+				arrowPoints += [ endX + length, endY + length ].join(',') + ' ';
+				arrowPoints += [ endX, endY ].join(',') + ' ';
 			}
 		}
 		var elementSVG = this.getPolygonElementSVG('Arrow_' + horizontal + ele, "svgArrows");
 		if (null != elementSVG) {
-			elementSVG.setAttribute('points', pointsSVG.trim());
+			elementSVG.setAttribute('points', arrowPoints.trim());
 			elementSVG.setAttribute('style', "stroke:#FF0000;stroke-width: 1.0; visibility:" + ((isVisible) ? "visible" : "hidden"));
 		}
 	}
@@ -350,7 +352,6 @@ function ModelRenderer() {
 		event.preventDefault();
 		var isVisible = _that.selecedNodeId != null;
 		if (isVisible) {
-			var pointsSVG = "";
 			var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
 			var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
 			if (!OPTIONS.GRAVITY_ACTIVE) {

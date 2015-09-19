@@ -69,9 +69,9 @@ public class FemMobile implements EntryPoint {
 		model = new Solver();
 
 		if ("Cantilever".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createDefaultModel(900, 110, 70, 6, 0, false).toString());
+			model.createModel(ModelFactory.createDefaultModel(900, 140, 45, 7, 0, false).toString());
 		} else if ("Beam".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createDefaultModel(900, 110, 70, 6, 0, true).toString());
+			model.createModel(ModelFactory.createDefaultModel(900, 140, 45, 7, 0, true).toString());
 		} else if ("Eiffel Tower".equalsIgnoreCase(modelName)) {
 			model.createModel(ModelFactory.createEiffelTowerModel());
 		}
@@ -79,6 +79,9 @@ public class FemMobile implements EntryPoint {
 	}
 
 	public void runSimulation() {
+		
+		fetchValuesFromGui();
+		
 		if (isGravityActive) {
 			model.solve(model.caluculateInputForcesGravity(beta, gamma));
 		} else {

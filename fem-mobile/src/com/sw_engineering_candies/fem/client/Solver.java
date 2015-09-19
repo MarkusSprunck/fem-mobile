@@ -465,19 +465,19 @@ public class Solver {
 	}
 
 	public double getSolutionNodeDisplacementY(final int nodeId) {
-		return solutionDisplacements.getValue(nodeId * 2 - 1);
+		return !isSolved ? 0.0 : solutionDisplacements.getValue(nodeId * 2 - 1);
 	}
 
 	public double getSolutionNodeDisplacementX(final int nodeId) {
-		return solutionDisplacements.getValue(nodeId * 2 - 2);
+		return !isSolved ? 0.0 : solutionDisplacements.getValue(nodeId * 2 - 2);
 	}
 
 	public double getSolutionNodeForceY(final int nodeId) {
-		return solutionForces.getValue(nodeId * 2 - 1);
+		return !isSolved ? 0.0 : solutionForces.getValue(nodeId * 2 - 1);
 	}
 
 	public double getSolutionNodeForceX(final int nodeId) {
-		return solutionForces.getValue(nodeId * 2 - 2);
+		return !isSolved ? 0.0 : solutionForces.getValue(nodeId * 2 - 2);
 	}
 
 	public double getNodeForceY(final int nodeId) {
