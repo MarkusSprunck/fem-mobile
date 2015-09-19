@@ -93,7 +93,7 @@ public class Solver {
 	protected boolean isSolved = false;
 
 	/** Buffer to create JSON result	 */
-	private final static StringBuilder json = new StringBuilder(32000);
+	private final static StringBuilder json = new StringBuilder(64000);
 
 	/**
 	 * Parse model description and create global stiffness matrix
@@ -668,27 +668,55 @@ public class Solver {
 
 		final double start = System.currentTimeMillis();
 
-		json.delete(0, json.length());
+		int nodeId = 0;
+		int indexX = 0;
+		int indexY = 0;
+		json.setLength(0);
 		json.append("[");
 		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
-			json.append("[");
-			for (int cornerId = 1; cornerId < 4; cornerId++) {
-				final int nodeId = getNodeIdByElementId(elementId, cornerId);
-				json.append("\n{\"id\":").append(nodeId);
-				json.append(",\"idElement\":").append(elementId);
-				json.append(",\"x_force\":").append(getSolutionNodeForceX(nodeId));
-				json.append(",\"y_force\":").append(getSolutionNodeForceY(nodeId));
-				json.append(",\"x_d\":").append(getSolutionNodeDisplacementX(nodeId));
-				json.append(",\"y_d\":").append(getSolutionNodeDisplacementY(nodeId));
-				json.append(",\"x_fixed\":").append(isNodeFixedInXAxis(nodeId));
-				json.append(",\"y_fixed\":").append(isNodeFixedInYAxis(nodeId));
-				json.append(",\"x\":").append(getNodeX(elementId, cornerId));
-				json.append(",\"y\":").append(-getNodeY(elementId, cornerId)).append(" }\n");
-				if (cornerId < 3) {
-					json.append(',');
-				}
-			}
-			json.append("]");
+
+			// First node
+			nodeId = nodes[elementId][1].nodeID;
+			indexX = nodeId * 2 - 2;
+			indexY = nodeId * 2 - 1;
+			json.append("[\n{\"id\":").append(nodeId);
+			json.append(",\"x_force\":").append(!isSolved ? 0.0 : solutionForces.getValue(indexX));
+			json.append(",\"y_force\":").append(!isSolved ? 0.0 : solutionForces.getValue(indexY));
+			json.append(",\"x_d\":").append(!isSolved ? 0.0 : solutionDisplacements.getValue(indexX));
+			json.append(",\"y_d\":").append(!isSolved ? 0.0 : solutionDisplacements.getValue(indexY));
+			json.append(",\"x_fixed\":").append(!Double.isNaN(inputDisplacements.getValue(indexX)));
+			json.append(",\"y_fixed\":").append(!Double.isNaN(inputDisplacements.getValue(indexY)));
+			json.append(",\"x\":").append(nodes[elementId][1].x);
+			json.append(",\"y\":").append(-nodes[elementId][1].y).append(" }\n,");
+
+			// Second node
+			nodeId = nodes[elementId][2].nodeID;
+			indexX = nodeId * 2 - 2;
+			indexY = nodeId * 2 - 1;
+			json.append("\n{\"id\":").append(nodeId);
+			json.append(",\"x_force\":").append(!isSolved ? 0.0 : solutionForces.getValue(indexX));
+			json.append(",\"y_force\":").append(!isSolved ? 0.0 : solutionForces.getValue(indexY));
+			json.append(",\"x_d\":").append(!isSolved ? 0.0 : solutionDisplacements.getValue(indexX));
+			json.append(",\"y_d\":").append(!isSolved ? 0.0 : solutionDisplacements.getValue(indexY));
+			json.append(",\"x_fixed\":").append(!Double.isNaN(inputDisplacements.getValue(indexX)));
+			json.append(",\"y_fixed\":").append(!Double.isNaN(inputDisplacements.getValue(indexY)));
+			json.append(",\"x\":").append(nodes[elementId][2].x);
+			json.append(",\"y\":").append(-nodes[elementId][2].y).append(" }\n,");
+
+			// Third node
+			nodeId = nodes[elementId][3].nodeID;
+			indexX = nodeId * 2 - 2;
+			indexY = nodeId * 2 - 1;
+			json.append("\n{\"id\":").append(nodeId);
+			json.append(",\"x_force\":").append(!isSolved ? 0.0 : solutionForces.getValue(indexX));
+			json.append(",\"y_force\":").append(!isSolved ? 0.0 : solutionForces.getValue(indexY));
+			json.append(",\"x_d\":").append(!isSolved ? 0.0 : solutionDisplacements.getValue(indexX));
+			json.append(",\"y_d\":").append(!isSolved ? 0.0 : solutionDisplacements.getValue(indexY));
+			json.append(",\"x_fixed\":").append(!Double.isNaN(inputDisplacements.getValue(indexX)));
+			json.append(",\"y_fixed\":").append(!Double.isNaN(inputDisplacements.getValue(indexY)));
+			json.append(",\"x\":").append(nodes[elementId][3].x);
+			json.append(",\"y\":").append(-nodes[elementId][3].y).append(" }\n]");
+
 			if (elementId < numberOfElements) {
 				json.append(',');
 			}
@@ -698,7 +726,7 @@ public class Solver {
 		final double end = System.currentTimeMillis();
 		System.out.println("json created             [" + (end - start) + "ms, capacity=" + json.capacity() + "]");
 
-		return json.toString().replace("NaN", "0.0");
+		return json.toString();
 	}
 
 	public void setThickness(final double thickness) {

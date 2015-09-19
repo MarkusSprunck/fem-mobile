@@ -80,7 +80,7 @@ function ModelRenderer() {
 				this.renderForces(node, x, y);
 				this.renderNode(node, x, y);
 			}
-			this.renderElement(node, points, delta);
+			this.renderElement(ele, points, delta);
 		}
 	}
 
@@ -151,8 +151,8 @@ function ModelRenderer() {
 		this.drawVector(x, y, x, y + node.y_force * OPTIONS.SCALE_FORCE, false, (node.y_force > 0.0), node.id, isSelectedElement, node.y_fixed);
 	}
 
-	ModelRenderer.prototype.renderElement = function(node, elementPoints, delta) {
-		var elementSVG = this.getPolygonElementSVG('E' + node.idElement, "svgElements");
+	ModelRenderer.prototype.renderElement = function(idElement, elementPoints, delta) {
+		var elementSVG = this.getPolygonElementSVG('E' + idElement, "svgElements");
 		if (null != elementSVG) {
 			elementSVG.setAttribute('points', elementPoints.trim());
 			elementSVG.setAttribute('style', "fill:" + this.getColor(delta) + ";");
