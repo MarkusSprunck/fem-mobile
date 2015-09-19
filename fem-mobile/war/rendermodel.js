@@ -31,11 +31,11 @@
 var OPTIONS = function optionsModelRenderer() {
 	"use strict";
 	return {
-		MODEL_NAME : 'Beam',
+		MODEL_NAME : 'Eiffel Tower',
 		GRAVITY_ACTIVE : true,
 		BETA : 0.0,
 		GAMMA : 0.0,
-		SCALE_FORCE : 0.005,
+		SCALE_FORCE : 0.001,
 		SCALE_DISPLACEMENT : 1.0,
 		ORIENTATION : 'Normal portrait'
 	};
@@ -85,11 +85,11 @@ function ModelRenderer() {
 	}
 
 	ModelRenderer.prototype.renderColorScala = function() {
-		var scalaNumber = 25;
+		var scalaNumber = 30;
 		var offset_x_scala = 10;
 		var offset_y_scala = 80;
 		var scala_size_x = 15;
-		var scala_size_y = 395;
+		var scala_size_y = 505;
 		var delta_y = scala_size_y / scalaNumber;
 
 		for (var index = 0; index <= scalaNumber; index++) {
@@ -113,7 +113,7 @@ function ModelRenderer() {
 			text.setAttribute('x', offset_x_scala + scala_size_x * 5.5);
 			text.setAttribute('y', offset_y_scala + (index + 0.75) * scala_size_y / scalaNumber);
 			text.setAttribute('fill', '#FFFFFF');
-			text.textContent = value.toFixed(2) + ' mm';
+			text.textContent = value.toFixed(3) + ' mm';
 			var svg1 = document.getElementById("svgLegend");
 			svg1.appendChild(text);
 		}
@@ -164,7 +164,7 @@ function ModelRenderer() {
 		if (null != elementSVG) {
 			elementSVG.setAttribute('cx', x);
 			elementSVG.setAttribute('cy', y);
-			elementSVG.setAttribute('r', 4);
+			elementSVG.setAttribute('r', 8);
 		}
 	}
 
@@ -181,21 +181,6 @@ function ModelRenderer() {
 		green = Math.sin(mean + 1) * 127 + 128;
 		blue = Math.sin(mean * 1.5 + 4) * 127 + 128;
 		return '#' + toHex(red) + toHex(green) + toHex(blue);
-	}
-
-	ModelRenderer.prototype.setStatusLineText = function(value) {
-		var text = document.getElementById("SL1");
-		if (null == text) {
-			text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-			text.setAttribute('id', "SL1");
-			text.setAttribute('style', 'text-anchor: start;');
-			text.setAttribute('fill', '#FFFFFF');
-			text.setAttribute('x', 10);
-			text.setAttribute('y', 600);
-			var svg1 = document.getElementById("svgStatusLine");
-			svg1.appendChild(text);
-		}
-		text.textContent = value;
 	}
 
 	ModelRenderer.prototype.setHeadLine = function(value) {
@@ -271,9 +256,9 @@ function ModelRenderer() {
 				_that.activeNodeId = event.target.id;
 				if (_that.activeNodeId != null) {
 					if (_that.selecedNodeId != null) {
-						_that.getCircleElementSVG(_that.selecedNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:1.0");
+						_that.getCircleElementSVG(_that.selecedNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.8");
 					} else {
-						_that.getCircleElementSVG(_that.activeNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.8");
+						_that.getCircleElementSVG(_that.activeNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.4");
 					}
 				}
 			}, false);
@@ -291,8 +276,8 @@ function ModelRenderer() {
 			this.minColor = Math.min(deltaX, this.minColor);
 			this.maxColor = Math.max(deltaX, this.maxColor);
 		}
-		this.minColor = Math.min(this.minColor, -0.1);
-		this.maxColor = Math.max(this.maxColor, 0.1);
+		this.minColor = Math.min(this.minColor, -0.001);
+		this.maxColor = Math.max(this.maxColor, 0.001);
 	}
 
 	ModelRenderer.prototype.drawVector = function(startX, startY, endX, endY, horizontal, positive, ele, isSelectedElement, isFixedNode) {

@@ -46,7 +46,6 @@
 		 <g id="svgFixed" />
   		 <g id="svgArrows" />
   		 <g id="svgLegend" />
-  		 <g id="svgStatusLine" />
   		 <g id="svgHeadLine">
 	     <a href="https://plus.google.com/u/0/117292523089281814301?rel=author" id="svgHeadLineLink"> </a></g>
 		 <g id="svgForce" />  	 	 
@@ -82,8 +81,8 @@
 					gui.add(OPTIONS, 'BETA', -100.0, 100.0).step(0.5).name('Rotate X-Axis').listen();
 					gui.add(OPTIONS, 'GAMMA', -100.0, 100.0).step(0.5).name('Rotate Y-Axis').listen();
 				}
-				gui.add(OPTIONS, 'SCALE_FORCE', 0.001, 0.1).step(0.001).name('Scale Forces').listen();
-				gui.add(OPTIONS, 'SCALE_DISPLACEMENT', 0.0, 100.0).step(1.0).name('Scale Displacements').listen();
+				gui.add(OPTIONS, 'SCALE_FORCE', 0.0005, 0.05).step(0.0001).name('Force *').listen();
+				gui.add(OPTIONS, 'SCALE_DISPLACEMENT', 0.0, 2.0).step(0.1).name('Displacement *').listen();
 				gui.add(OPTIONS, 'MODEL_NAME', [ 'Cantilever', 'Beam', 'Eiffel Tower' ]).name('Model').listen().onChange(function(value) {
 
 					var myNode = document.getElementById('svgElements');
@@ -131,19 +130,8 @@
 				// Render SVG				
 				model = JSON.parse(inputModel);
 				modelRenderer.calculateColorRange(model);
-				modelRenderer.renderModel(model, 150, 500);
+				modelRenderer.renderModel(model, 150, 600);
 				modelRenderer.renderColorScala();
-
-				// Update statusline
-				if (OPTIONS.GRAVITY_ACTIVE) {
-					var b = Math.round(OPTIONS.BETA);
-					var g = Math.round(OPTIONS.GAMMA);
-					modelRenderer.setStatusLineText(OPTIONS.ORIENTATION + ', gravity mode, β=' + b + '°, γ=' + g + '°');
-				} else {
-					var forceX = modelRenderer.forceX;
-					var forceY = modelRenderer.forceY;
-					modelRenderer.setStatusLineText(OPTIONS.ORIENTATION + ', drag mode, Fx=' + forceX + ', Fy=' + -forceY);
-				}
 			}
 		}
 

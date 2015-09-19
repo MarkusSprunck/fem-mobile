@@ -73,7 +73,7 @@ public class FemMobile implements EntryPoint {
 		} else if ("Beam".equalsIgnoreCase(modelName)) {
 			model.createModel(ModelFactory.createDefaultModel(900, 140, 45, 7, 0, true).toString());
 		} else if ("Eiffel Tower".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createEiffelTowerModel());
+			model.createModel(ModelFactory.createEiffelTowerModel(3.0, 3.0));
 		}
 		setModel(model.getJSON());
 	}

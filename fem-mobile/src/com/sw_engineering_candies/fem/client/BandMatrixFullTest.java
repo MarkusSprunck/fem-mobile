@@ -471,7 +471,7 @@ public class BandMatrixFullTest {
 
 	@Before
 	public void setup() {
-		final String inputModel = ModelFactory.createEiffelTowerModel();
+		final String inputModel = ModelFactory.createEiffelTowerModel(1, 1);
 		model = new Solver();
 		model.createModel(inputModel);
 	}
