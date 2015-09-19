@@ -164,7 +164,7 @@ function ModelRenderer() {
 		if (null != elementSVG) {
 			elementSVG.setAttribute('cx', x);
 			elementSVG.setAttribute('cy', y);
-			elementSVG.setAttribute('r', 8);
+			elementSVG.setAttribute('r', 16);
 		}
 	}
 
@@ -275,9 +275,9 @@ function ModelRenderer() {
 	ModelRenderer.prototype.changeOpacityOfNode = function() {
 		if (this.activeNodeId != null) {
 			if (this.selecedNodeId != null) {
-				this.getCircleElementSVG(this.selecedNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.8");
+				this.getCircleElementSVG(this.selecedNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.5");
 			} else {
-				this.getCircleElementSVG(this.activeNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.4");
+				this.getCircleElementSVG(this.activeNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.5");
 			}
 		}
 	}
