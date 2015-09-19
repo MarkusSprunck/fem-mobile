@@ -239,6 +239,7 @@ function ModelRenderer() {
 				_that.mouseDownY = event.clientY;
 				_that.selecedNodeIdLast = _that.selecedNodeId;
 				_that.selecedNodeId = event.target.id;
+				_that.changeOpacityOfNode();
 				OPTIONS.GRAVITY_ACTIVE = false;
 			}, false);
 			elementSVG.addEventListener('touchstart', function(event) {
@@ -247,25 +248,38 @@ function ModelRenderer() {
 				_that.mouseDownY = event.touches[0].clientY;
 				_that.selecedNodeIdLast = _that.selecedNodeId;
 				_that.selecedNodeId = event.target.id;
+				_that.changeOpacityOfNode();
+				OPTIONS.GRAVITY_ACTIVE = false;
+			}, false);
+
+			elementSVG.addEventListener('touchmove', function(event) {
+				event.preventDefault();
+				_that.getCircleElementSVG(_that.activeNodeId, "svgNodes").setAttribute('style', "opacity:0.0");
+				_that.activeNodeId = event.target.id;
+				_that.changeOpacityOfNode();
 				OPTIONS.GRAVITY_ACTIVE = false;
 			}, false);
 
 			elementSVG.addEventListener('mousemove', function(event) {
-				event.preventDefault();
+				 event.preventDefault();
 				_that.getCircleElementSVG(_that.activeNodeId, "svgNodes").setAttribute('style', "opacity:0.0");
 				_that.activeNodeId = event.target.id;
-				if (_that.activeNodeId != null) {
-					if (_that.selecedNodeId != null) {
-						_that.getCircleElementSVG(_that.selecedNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.8");
-					} else {
-						_that.getCircleElementSVG(_that.activeNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.4");
-					}
-				}
+				_that.changeOpacityOfNode();
 			}, false);
 
 			document.getElementById(groupId).appendChild(elementSVG);
 		}
 		return elementSVG;
+	}
+
+	ModelRenderer.prototype.changeOpacityOfNode = function() {
+		if (this.activeNodeId != null) {
+			if (this.selecedNodeId != null) {
+				this.getCircleElementSVG(this.selecedNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.8");
+			} else {
+				this.getCircleElementSVG(this.activeNodeId, "svgNodes").setAttribute('style', "fill:white; opacity:0.4");
+			}
+		}
 	}
 
 	ModelRenderer.prototype.calculateColorRange = function(nodes) {
