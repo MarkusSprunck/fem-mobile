@@ -31,13 +31,16 @@
 var OPTIONS = function optionsModelRenderer() {
 	"use strict";
 	return {
-		MODEL_NAME : 'Beam',
+		MODEL_NAME : 'Cantilever',
 		GRAVITY_ACTIVE : true,
 		BETA : 0.0,
 		GAMMA : 0.0,
 		SCALE_FORCE : 0.001,
 		SCALE_DISPLACEMENT : 1.0,
-		ORIENTATION : 'Normal portrait'
+		ORIENTATION : 'Normal portrait',
+		LEFT : 170,
+		BOTTOM : 600,
+		COLOR_CODE : 2
 	};
 }();
 
@@ -53,25 +56,24 @@ function ModelRenderer() {
 	this.mouseDownY = null;
 
 	// Parameter for color legend
-	this.colorCode = 1;
 	this.minColor = 20;
 	this.maxColor = -20;
 
 	this.graphic = document.getElementById("mySVGGui");
 
-	ModelRenderer.prototype.renderModel = function(model, offset_x, offset_y) {
+	ModelRenderer.prototype.renderModel = function(model) {
 		var x, y = 0.0;
 		var points = "";
 		var node = null;
 		var element = null;
 		for (var ele = model.length - 1; ele >= 0; ele--, points = "") {
 			element = model[ele];
-			var delta = (this.colorCode == 1) ? model[ele][0].x_d : model[ele][0].y_d;
+			var delta = (OPTIONS.COLOR_CODE == 1) ? model[ele][0].x_d : model[ele][0].y_d;
 			for (var nodeId = 0; nodeId < 3; nodeId++) {
 				// get node and location
 				node = element[nodeId];
-				x = offset_x + node.x + node.x_d * OPTIONS.SCALE_DISPLACEMENT;
-				y = offset_y + node.y + node.y_d * OPTIONS.SCALE_DISPLACEMENT;
+				x = OPTIONS.LEFT + node.x + node.x_d * OPTIONS.SCALE_DISPLACEMENT;
+				y = OPTIONS.BOTTOM + node.y + node.y_d * OPTIONS.SCALE_DISPLACEMENT;
 
 				// add this node to path for element
 				points += [ x, y ].join(',') + ' ';
@@ -261,7 +263,7 @@ function ModelRenderer() {
 			}, false);
 
 			elementSVG.addEventListener('mousemove', function(event) {
-				 event.preventDefault();
+				event.preventDefault();
 				_that.getCircleElementSVG(_that.activeNodeId, "svgNodes").setAttribute('style', "opacity:0.0");
 				_that.activeNodeId = event.target.id;
 				_that.changeOpacityOfNode();
@@ -286,7 +288,7 @@ function ModelRenderer() {
 		this.minColor = 250.0;
 		this.maxColor = -250.0;
 		for (var ele = nodes.length - 1; ele >= 0; ele--) {
-			var deltaX = (this.colorCode == 1) ? nodes[ele][0].x_d : -nodes[ele][0].y_d;
+			var deltaX = (OPTIONS.COLOR_CODE == 1) ? nodes[ele][0].x_d : -nodes[ele][0].y_d;
 			this.minColor = Math.min(deltaX, this.minColor);
 			this.maxColor = Math.max(deltaX, this.maxColor);
 		}
@@ -354,7 +356,7 @@ function ModelRenderer() {
 			var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
 			var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
 			if (!OPTIONS.GRAVITY_ACTIVE) {
-				var factor = 1;
+				var factor = 0.5;
 				_that.forceY = (y2 - _that.mouseDownY) * factor;
 				_that.forceX = (x2 - _that.mouseDownX) * factor;
 			}

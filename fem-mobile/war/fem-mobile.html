@@ -33,6 +33,7 @@
 <script type="text/javascript" src="FemMobile/FemMobile.nocache.js"></script>
 <script type="text/javascript" src="rendermodel.js"></script>
 <script type="text/javascript" src="dat.gui.js"></script>
+<link type="text/css" rel="stylesheet" href="dat-gui-swec.css">
 
 </head>
 
@@ -64,7 +65,8 @@
 		var modelRenderer;
 		var initReady = false;
 		var gui = new dat.GUI({
-			autoPlace : false
+			autoPlace : false,
+			width : 400
 		});
 
 		/**
@@ -76,13 +78,6 @@
 				modelRenderer = new ModelRenderer();
 				modelRenderer.setHeadLine("Mobile Finite Element Simulation");
 
-				// Create simple GUI and display for devices without sensor data
-				if (typeof window.orientation === "undefined") {
-					gui.add(OPTIONS, 'BETA', -100.0, 100.0).step(0.5).name('Rotate X-Axis').listen();
-					gui.add(OPTIONS, 'GAMMA', -100.0, 100.0).step(0.5).name('Rotate Y-Axis').listen();
-				}
-				gui.add(OPTIONS, 'SCALE_FORCE', 0.0005, 0.05).step(0.0001).name('Force *').listen();
-				gui.add(OPTIONS, 'SCALE_DISPLACEMENT', 0.0, 2.0).step(0.1).name('Displacement *').listen();
 				gui.add(OPTIONS, 'MODEL_NAME', [ 'Cantilever', 'Beam', 'Eiffel Tower' ]).name('Model').listen().onChange(function(value) {
 
 					var myNode = document.getElementById('svgElements');
@@ -111,17 +106,30 @@
 					}
 
 				});
-				gui.add(modelRenderer, 'colorCode', {
+
+				// Create simple GUI and display for devices without sensor data
+				if (typeof window.orientation === "undefined") {
+					gui.add(OPTIONS, 'BETA', -100.0, 100.0).step(0.5).name('Rotate X-Axis').listen();
+					gui.add(OPTIONS, 'GAMMA', -100.0, 100.0).step(0.5).name('Rotate Y-Axis').listen();
+				}
+				gui.add(OPTIONS, 'SCALE_FORCE', 0.0005, 0.05).step(0.0001).name('Force *').listen();
+				gui.add(OPTIONS, 'SCALE_DISPLACEMENT', 0.0, 2.0).step(0.1).name('Displacement *').listen();
+				gui.add(OPTIONS, 'COLOR_CODE', {
 					X : 1,
 					Y : 2
 				}).name('Color Code');
+	
+				gui.add(OPTIONS, 'LEFT', 100, 400).step(1).name('Left').listen();
+				gui.add(OPTIONS, 'BOTTOM', 300, 800).step(1).name('Bottom').listen();
+
 				gui.add(OPTIONS, 'GRAVITY_ACTIVE').name('Gravity').listen().onChange(function(value) {
 					if (OPTIONS.GRAVITY_ACTIVE) {
 						OPTIONS.BETA = -25.0;
 						OPTIONS.GAMMA = 0.0;
 					}
 				});
-
+				
+				gui.close();
 				var element = document.getElementById('datgui');
 				element.appendChild(gui.domElement);
 
@@ -130,7 +138,7 @@
 				// Render SVG				
 				model = JSON.parse(inputModel);
 				modelRenderer.calculateColorRange(model);
-				modelRenderer.renderModel(model, 150, 600);
+				modelRenderer.renderModel(model);
 				modelRenderer.renderColorScala();
 			}
 		}
