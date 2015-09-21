@@ -25,7 +25,7 @@ public class SolverTests {
 
 		// ACT
 		model.solve(null);
-		model.getJSON();
+//		model.getJSON();
 
 		// ASSERT
 		assertEquals(0.05030161207750177, model.getSolutionNodeDisplacementY(cols * rows), 0.00000001);

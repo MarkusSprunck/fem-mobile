@@ -67,7 +67,6 @@ public class FemMobile implements EntryPoint {
 
 	private static void initModel() {
 		model = new Solver();
-
 		if ("Cantilever".equalsIgnoreCase(modelName)) {
 			model.createModel(ModelFactory.createDefaultModel(900, 140, 45, 7, 0, false).toString());
 		} else if ("Beam".equalsIgnoreCase(modelName)) {
@@ -75,42 +74,34 @@ public class FemMobile implements EntryPoint {
 		} else if ("Eiffel Tower".equalsIgnoreCase(modelName)) {
 			model.createModel(ModelFactory.createEiffelTowerModel(3.0, 3.0));
 		}
-		setModel(model.getJSON());
+		renderModel();
 	}
 
 	public void runSimulation() {
-		
-		fetchValuesFromGui();
-		
-		if (isGravityActive) {
-			model.solve(model.caluculateInputForcesGravity(beta, gamma));
-		} else {
-			model.solve(model.caluculateInputForcesSingle(forceX, forceY, selecedNodeId));
-		}
-		setModel(model.getJSON());
-	}
-
-	public static void fetchValuesFromGui() {
 		forceY = Double.valueOf(getForceY());
 		forceX = Double.valueOf(getForceX());
 		beta = Double.valueOf(getBeta());
 		gamma = Double.valueOf(getGamma());
 		isGravityActive = Boolean.parseBoolean(isGravityActive());
 		selecedNodeId = (null != getSelecedNodeId()) ? getSelecedNodeId() : "";
-
+		
 		if (!modelName.equalsIgnoreCase(getModelName())) {
 			modelName = getModelName();
 			initModel();
 		}
+		
+		if (isGravityActive) {
+			model.solve(model.caluculateInputForcesGravity(beta, gamma));
+		} else {
+			model.solve(model.caluculateInputForcesSingle(forceX, forceY, selecedNodeId));
+		}
+		
+		renderModel();
 	}
 
-	public static native void exportStaticMethod() /*-{
-		$wnd.updateForces = $entry(@com.sw_engineering_candies.fem.client.FemMobile::fetchValuesFromGui());
-	}-*/;
-
-	public static native void setModel(String model)
+	public static native void renderModel()
 	/*-{
-		$wnd.setModel(model);
+		$wnd.setModel();
 	}-*/;
 
 	public static native String getBeta()
@@ -154,16 +145,117 @@ public class FemMobile implements EntryPoint {
 	@Override
 	public void onModuleLoad() {
 
-		exportStaticMethod();
+		exportStaticMethod1();
+		exportStaticMethod2();
+		exportStaticMethod3();
+		exportStaticMethod4();
+		exportStaticMethod5();
+		exportStaticMethod6();
+		exportStaticMethod7();
+		exportStaticMethod8();
+		exportStaticMethod9();
+		exportStaticMethod10();
+		exportStaticMethod11();
 
 		final Timer timerGraficUpdate = new Timer() {
 			@Override
 			public void run() {
-				fetchValuesFromGui();
 				runSimulation();
 			}
 		};
 		timerGraficUpdate.scheduleRepeating(100);
 	}
+
+	public static int getNumberOfElements() {
+		return model.numberOfElements;
+	};
+
+	public static int getNumberOfNodes() {
+		return model.numberOfNodes;
+	};
+
+	public static int getNodeId(int elementId, int cornerId) {
+		return model.nodes[elementId][cornerId].nodeID;
+	};
+
+	public static double getSolutionForcesX(int nodeId) {
+		double value = model.solutionForces.getValue(nodeId * 2 - 2);
+		return Double.isNaN(value) ? 0.0 : value ;
+	};
+
+	public static double getSolutionForcesY(int nodeId) {
+		double value = model.solutionForces.getValue(nodeId * 2 - 1);
+		return Double.isNaN(value) ? 0.0 : value ;
+	};
+
+	public static double getSolutionDisplacementsX(int nodeId) {
+		double value = model.solutionDisplacements.getValue(nodeId * 2 - 2);
+		return Double.isNaN(value) ? 0.0 : value ;
+	};
+
+	public static double getSolutionDisplacementsY(int nodeId) {
+		double value = model.solutionDisplacements.getValue(nodeId * 2 - 1);
+		return Double.isNaN(value) ? 0.0 : value ;
+	};
+
+	public static boolean isFixedY(int nodeId) {
+		return !Double.isNaN(model.inputDisplacements.getValue(nodeId * 2 - 1));
+	};
+
+	public static boolean isFixedX(int nodeId) {
+		return !Double.isNaN(model.inputDisplacements.getValue(nodeId * 2 - 2));
+	};
+
+	public static double getX(int elementId, int cornerId) {
+		return model.nodes[elementId][cornerId].x;
+	};
+
+	public static double getY(int elementId, int cornerId) {
+		return -model.nodes[elementId][cornerId].y;
+	};
+
+	public static native void exportStaticMethod1() /*-{
+		$wnd.fem_getNumberOfNodes = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getNumberOfNodes());
+	}-*/;
+
+	public static native void exportStaticMethod2() /*-{
+		$wnd.fem_getNumberOfElements = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getNumberOfElements());
+	}-*/;
+
+	public static native void exportStaticMethod3() /*-{
+		$wnd.fem_getNodeId = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getNodeId(II));
+	}-*/;
+
+	public static native void exportStaticMethod4() /*-{
+		$wnd.fem_getSolutionForcesX = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getSolutionForcesX(I));
+	}-*/;
+
+	public static native void exportStaticMethod5() /*-{
+		$wnd.fem_getSolutionForcesY = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getSolutionForcesY(I));
+	}-*/;
+
+	public static native void exportStaticMethod6() /*-{
+		$wnd.fem_getSolutionDisplacementsX = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getSolutionDisplacementsX(I));
+	}-*/;
+
+	public static native void exportStaticMethod7() /*-{
+		$wnd.fem_getSolutionDisplacementsY = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getSolutionDisplacementsY(I));
+	}-*/;
+
+	public static native void exportStaticMethod8() /*-{
+		$wnd.fem_isFixedX = $entry(@com.sw_engineering_candies.fem.client.FemMobile::isFixedX(I));
+	}-*/;
+
+	public static native void exportStaticMethod9() /*-{
+		$wnd.fem_isFixedY = $entry(@com.sw_engineering_candies.fem.client.FemMobile::isFixedY(I));
+	}-*/;
+
+	public static native void exportStaticMethod10() /*-{
+		$wnd.fem_getX = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getX(II));
+	}-*/;
+
+	public static native void exportStaticMethod11() /*-{
+		$wnd.fem_getY = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getY(II));
+	}-*/;
 
 }

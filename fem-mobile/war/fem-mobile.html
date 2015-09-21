@@ -33,7 +33,7 @@
 <script type="text/javascript" src="FemMobile/FemMobile.nocache.js"></script>
 <script type="text/javascript" src="rendermodel.js"></script>
 <script type="text/javascript" src="dat.gui.js"></script>
-<link type="text/css" rel="stylesheet" href="dat-gui-swec.css">
+<!--  <link type="text/css" rel="stylesheet" href="dat-gui-swec.css"> -->
 
 </head>
 
@@ -72,7 +72,7 @@
 		/**
 		 * Called by a timer defined in class Fem_sample.java 
 		 */
-		function setModel(inputModel) {
+		function setModel() {
 
 			if (!initReady) {
 				modelRenderer = new ModelRenderer();
@@ -118,7 +118,7 @@
 					X : 1,
 					Y : 2
 				}).name('Color Code');
-	
+
 				gui.add(OPTIONS, 'LEFT', 100, 400).step(1).name('Left').listen();
 				gui.add(OPTIONS, 'BOTTOM', 300, 800).step(1).name('Bottom').listen();
 
@@ -128,17 +128,15 @@
 						OPTIONS.GAMMA = 0.0;
 					}
 				});
-				
+
 				gui.close();
 				var element = document.getElementById('datgui');
 				element.appendChild(gui.domElement);
 
 				initReady = true;
 			} else {
-				// Render SVG				
-				model = JSON.parse(inputModel);
-				modelRenderer.calculateColorRange(model);
-				modelRenderer.renderModel(model);
+				modelRenderer.calculateColorRange();
+				modelRenderer.renderModel();
 				modelRenderer.renderColorScala();
 			}
 		}

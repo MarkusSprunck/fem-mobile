@@ -61,28 +61,29 @@ function ModelRenderer() {
 
 	this.graphic = document.getElementById("mySVGGui");
 
-	ModelRenderer.prototype.renderModel = function(model) {
+	ModelRenderer.prototype.renderModel = function() {
 		var x, y = 0.0;
+		var nodeId = 0;
 		var points = "";
-		var node = null;
-		var element = null;
-		for (var ele = model.length - 1; ele >= 0; ele--, points = "") {
-			element = model[ele];
-			var delta = (OPTIONS.COLOR_CODE == 1) ? model[ele][0].x_d : model[ele][0].y_d;
-			for (var nodeId = 0; nodeId < 3; nodeId++) {
+		var numberOfElements = fem_getNumberOfElements();
+		for (var elementId = 1; elementId <= numberOfElements; elementId++, points = "") {
+
+			nodeId = fem_getNodeId(elementId, 1);
+			var delta = (OPTIONS.COLOR_CODE == 1) ? fem_getSolutionDisplacementsX(nodeId) : fem_getSolutionDisplacementsY(nodeId);
+			for (var cornerId = 1; cornerId <= 3; cornerId++) {
 				// get node and location
-				node = element[nodeId];
-				x = OPTIONS.LEFT + node.x + node.x_d * OPTIONS.SCALE_DISPLACEMENT;
-				y = OPTIONS.BOTTOM + node.y + node.y_d * OPTIONS.SCALE_DISPLACEMENT;
+				nodeId = fem_getNodeId(elementId, cornerId);
+				x = OPTIONS.LEFT + fem_getX(elementId, cornerId) + fem_getSolutionDisplacementsX(nodeId) * OPTIONS.SCALE_DISPLACEMENT;
+				y = OPTIONS.BOTTOM + fem_getY(elementId, cornerId) + fem_getSolutionDisplacementsY(nodeId) * OPTIONS.SCALE_DISPLACEMENT;
 
 				// add this node to path for element
 				points += [ x, y ].join(',') + ' ';
 
-				this.renderFixtures(node, x, y);
-				this.renderForces(node, x, y);
-				this.renderNode(node, x, y);
+				this.renderFixtures(nodeId, x, y);
+				this.renderForces(nodeId, x, y);
+				this.renderNode(nodeId, x, y);
 			}
-			this.renderElement(ele, points, delta);
+			this.renderElement(elementId, points, delta);
 		}
 	}
 
@@ -112,7 +113,7 @@ function ModelRenderer() {
 				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 				text.setAttribute('id', "LT1" + index);
 			}
-			text.setAttribute('x', offset_x_scala + scala_size_x * 5.5);
+			text.setAttribute('x', offset_x_scala + scala_size_x * 6.0);
 			text.setAttribute('y', offset_y_scala + (index + 0.75) * scala_size_y / scalaNumber);
 			text.setAttribute('fill', '#FFFFFF');
 			text.textContent = value.toFixed(3) + ' mm';
@@ -121,25 +122,25 @@ function ModelRenderer() {
 		}
 	}
 
-	ModelRenderer.prototype.renderFixtures = function(node, x, y) {
+	ModelRenderer.prototype.renderFixtures = function(nodeId, x, y) {
 		var size = 10;
-		if (node.x_fixed) {
+		if (fem_isFixedX(nodeId)) {
 			var trianglePoints = "";
 			trianglePoints += [ x, y ].join(',') + ' ';
 			trianglePoints += [ x - size, y - size * 0.75 ].join(',') + ' ';
 			trianglePoints += [ x - size, y + size * 0.75 ].join(',') + ' ';
-			var elementSVG = this.getPolygonElementSVG('FIX_V' + node.id, "svgFixed");
+			var elementSVG = this.getPolygonElementSVG('FIX_V' + nodeId, "svgFixed");
 			if (null != elementSVG) {
 				elementSVG.setAttribute('points', trianglePoints.trim());
 				elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.5");
 			}
 		}
-		if (node.y_fixed) {
+		if (fem_isFixedY(nodeId)) {
 			var trianglePoints = "";
 			trianglePoints += [ x, y ].join(',') + ' ';
 			trianglePoints += [ x + size * 0.75, y + size ].join(',') + ' ';
 			trianglePoints += [ x - size * 0.75, y + size ].join(',') + ' ';
-			var elementSVG = this.getPolygonElementSVG('FIX_H' + node.id, "svgFixed");
+			var elementSVG = this.getPolygonElementSVG('FIX_H' + nodeId, "svgFixed");
 			if (null != elementSVG) {
 				elementSVG.setAttribute('points', trianglePoints.trim());
 				elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.5");
@@ -147,10 +148,12 @@ function ModelRenderer() {
 		}
 	}
 
-	ModelRenderer.prototype.renderForces = function(node, x, y) {
-		var isSelectedElement = !OPTIONS.GRAVITY_ACTIVE && ('N' + (node.id)) == this.selecedNodeId;
-		this.drawVector(x, y, x + node.x_force * OPTIONS.SCALE_FORCE, y, true, (node.x_force > 0.0), node.id, isSelectedElement, node.x_fixed);
-		this.drawVector(x, y, x, y + node.y_force * OPTIONS.SCALE_FORCE, false, (node.y_force > 0.0), node.id, isSelectedElement, node.y_fixed);
+	ModelRenderer.prototype.renderForces = function(nodeId, x, y) {
+		var isSelectedElement = !OPTIONS.GRAVITY_ACTIVE && ('N' + (nodeId)) == this.selecedNodeId;
+		this.drawVector(x, y, x + fem_getSolutionForcesX(nodeId) * OPTIONS.SCALE_FORCE, y, true, (fem_getSolutionForcesX(nodeId) > 0.0), nodeId,
+				isSelectedElement, fem_isFixedX(nodeId));
+		this.drawVector(x, y, x, y + fem_getSolutionForcesY(nodeId) * OPTIONS.SCALE_FORCE, false, (fem_getSolutionForcesY(nodeId) > 0.0), nodeId,
+				isSelectedElement, fem_isFixedY(nodeId));
 	}
 
 	ModelRenderer.prototype.renderElement = function(idElement, elementPoints, delta) {
@@ -161,8 +164,8 @@ function ModelRenderer() {
 		}
 	}
 
-	ModelRenderer.prototype.renderNode = function(node, x, y) {
-		var elementSVG = this.getCircleElementSVG('N' + node.id, "svgNodes");
+	ModelRenderer.prototype.renderNode = function(nodeId, x, y) {
+		var elementSVG = this.getCircleElementSVG('N' + nodeId, "svgNodes");
 		if (null != elementSVG) {
 			elementSVG.setAttribute('cx', x);
 			elementSVG.setAttribute('cy', y);
@@ -284,13 +287,14 @@ function ModelRenderer() {
 		}
 	}
 
-	ModelRenderer.prototype.calculateColorRange = function(nodes) {
+	ModelRenderer.prototype.calculateColorRange = function() {
 		this.minColor = 250.0;
 		this.maxColor = -250.0;
-		for (var ele = nodes.length - 1; ele >= 0; ele--) {
-			var deltaX = (OPTIONS.COLOR_CODE == 1) ? nodes[ele][0].x_d : -nodes[ele][0].y_d;
-			this.minColor = Math.min(deltaX, this.minColor);
-			this.maxColor = Math.max(deltaX, this.maxColor);
+		var numberOfElements = fem_getNumberOfElements();
+		for (var ele = 1; ele <= numberOfElements; ele++, points = "") {
+			var delta = (OPTIONS.COLOR_CODE == 1) ? fem_getSolutionDisplacementsX(ele, 1) : fem_getSolutionDisplacementsY(ele, 1);
+			this.minColor = Math.min(delta, this.minColor);
+			this.maxColor = Math.max(delta, this.maxColor);
 		}
 		this.minColor = Math.min(this.minColor, -0.001);
 		this.maxColor = Math.max(this.maxColor, 0.001);

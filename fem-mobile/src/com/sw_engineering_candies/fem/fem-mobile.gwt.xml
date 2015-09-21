@@ -4,9 +4,9 @@
 	<!-- module inherits -->
 	<inherits name='com.google.gwt.user.User' />
 	<inherits name='com.google.gwt.user.theme.dark.Dark' />
-	<inherits name="com.google.gwt.core.Core" />	
+	<inherits name="com.google.gwt.core.Core" />
 	<inherits name="com.google.gwt.http.HTTP" />
- 
+
 	<!-- Specify the app entry point class. -->
 	<entry-point class='com.sw_engineering_candies.fem.client.FemMobile' />
 
