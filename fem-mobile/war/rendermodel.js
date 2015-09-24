@@ -35,11 +35,11 @@ var OPTIONS = function optionsModelRenderer() {
 		GRAVITY_ACTIVE : true,
 		BETA : 0.0,
 		GAMMA : 0.0,
-		SCALE_FORCE : 0.001,
-		SCALE_DISPLACEMENT : 1.0,
+		SCALE_FORCE : 0.0001,
+		SCALE_DISPLACEMENT : 0.1,
 		ORIENTATION : 'Normal portrait',
 		LEFT : 170,
-		BOTTOM : 600,
+		BOTTOM : 420,
 		COLOR_CODE : 2
 	};
 }();
@@ -61,6 +61,24 @@ function ModelRenderer() {
 
 	this.graphic = document.getElementById("mySVGGui");
 
+	ModelRenderer.prototype.calculateColorRange = function() {
+		this.minColor = 250.0;
+		this.maxColor = -250.0;
+		var numberOfElements = fem_getNumberOfElements();
+		var delta = 0.0;
+		for (var ele = 1; ele <= numberOfElements; ele++, points = "") {
+			if (OPTIONS.COLOR_CODE == 1) {
+				delta = (fem_getSolutionDisplacementsX(ele, 1) + fem_getSolutionDisplacementsX(ele, 2) + fem_getSolutionDisplacementsX(ele, 3)) / 3.0;
+			} else {
+				delta = (fem_getSolutionDisplacementsY(ele, 1) + fem_getSolutionDisplacementsY(ele, 2) + fem_getSolutionDisplacementsY(ele, 3)) / 3.0;
+			}
+			this.minColor = Math.min(delta, this.minColor);
+			this.maxColor = Math.max(delta, this.maxColor);
+		}
+		this.minColor = Math.min(this.minColor, -0.001);
+		this.maxColor = Math.max(this.maxColor, 0.001);
+	}
+
 	ModelRenderer.prototype.renderModel = function() {
 		var x, y = 0.0;
 		var nodeId = 0;
@@ -69,12 +87,15 @@ function ModelRenderer() {
 		for (var elementId = 1; elementId <= numberOfElements; elementId++, points = "") {
 
 			nodeId = fem_getNodeId(elementId, 1);
-			var delta = (OPTIONS.COLOR_CODE == 1) ? fem_getSolutionDisplacementsX(nodeId) : fem_getSolutionDisplacementsY(nodeId);
+			var delta = 0.0;
 			for (var cornerId = 1; cornerId <= 3; cornerId++) {
+
 				// get node and location
 				nodeId = fem_getNodeId(elementId, cornerId);
+				delta = delta + ((OPTIONS.COLOR_CODE == 1) ? fem_getSolutionDisplacementsX(nodeId) : fem_getSolutionDisplacementsY(nodeId));
+
 				x = OPTIONS.LEFT + fem_getX(elementId, cornerId) + fem_getSolutionDisplacementsX(nodeId) * OPTIONS.SCALE_DISPLACEMENT;
-				y = OPTIONS.BOTTOM + fem_getY(elementId, cornerId) + fem_getSolutionDisplacementsY(nodeId) * OPTIONS.SCALE_DISPLACEMENT;
+				y = OPTIONS.BOTTOM + fem_getY(elementId, cornerId) - fem_getSolutionDisplacementsY(nodeId) * OPTIONS.SCALE_DISPLACEMENT;
 
 				// add this node to path for element
 				points += [ x, y ].join(',') + ' ';
@@ -83,6 +104,7 @@ function ModelRenderer() {
 				this.renderForces(nodeId, x, y);
 				this.renderNode(nodeId, x, y);
 			}
+			delta = delta / 3.0;
 			this.renderElement(elementId, points, delta);
 		}
 	}
@@ -113,7 +135,7 @@ function ModelRenderer() {
 				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 				text.setAttribute('id', "LT1" + index);
 			}
-			text.setAttribute('x', offset_x_scala + scala_size_x * 6.0);
+			text.setAttribute('x', offset_x_scala + scala_size_x * 6.5);
 			text.setAttribute('y', offset_y_scala + (index + 0.75) * scala_size_y / scalaNumber);
 			text.setAttribute('fill', '#FFFFFF');
 			text.textContent = value.toFixed(3) + ' mm';
@@ -287,19 +309,6 @@ function ModelRenderer() {
 		}
 	}
 
-	ModelRenderer.prototype.calculateColorRange = function() {
-		this.minColor = 250.0;
-		this.maxColor = -250.0;
-		var numberOfElements = fem_getNumberOfElements();
-		for (var ele = 1; ele <= numberOfElements; ele++, points = "") {
-			var delta = (OPTIONS.COLOR_CODE == 1) ? fem_getSolutionDisplacementsX(ele, 1) : fem_getSolutionDisplacementsY(ele, 1);
-			this.minColor = Math.min(delta, this.minColor);
-			this.maxColor = Math.max(delta, this.maxColor);
-		}
-		this.minColor = Math.min(this.minColor, -0.001);
-		this.maxColor = Math.max(this.maxColor, 0.001);
-	}
-
 	ModelRenderer.prototype.drawVector = function(startX, startY, endX, endY, horizontal, positive, ele, isSelectedElement, isFixedNode) {
 
 		var length = 6;
@@ -360,7 +369,7 @@ function ModelRenderer() {
 			var x2 = (event.type == "mousemove") ? event.clientX : event.touches[0].clientX;
 			var y2 = (event.type == "mousemove") ? event.clientY : event.touches[0].clientY;
 			if (!OPTIONS.GRAVITY_ACTIVE) {
-				var factor = 0.5;
+				var factor = 1.0;
 				_that.forceY = (y2 - _that.mouseDownY) * factor;
 				_that.forceX = (x2 - _that.mouseDownX) * factor;
 			}

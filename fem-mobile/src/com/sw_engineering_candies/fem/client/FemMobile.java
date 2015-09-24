@@ -68,9 +68,9 @@ public class FemMobile implements EntryPoint {
 	private static void initModel() {
 		model = new Solver();
 		if ("Cantilever".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createDefaultModel(900, 140, 45, 7, 0, false).toString());
+			model.createModel(ModelFactory.createDefaultModel(700, 100, 40, 6, 0, false).toString());
 		} else if ("Beam".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createDefaultModel(900, 140, 45, 7, 0, true).toString());
+			model.createModel(ModelFactory.createDefaultModel(700, 100, 40, 6, 0, true).toString());
 		} else if ("Eiffel Tower".equalsIgnoreCase(modelName)) {
 			model.createModel(ModelFactory.createEiffelTowerModel(3.0, 3.0));
 		}
@@ -194,7 +194,7 @@ public class FemMobile implements EntryPoint {
 	};
 
 	public static double getSolutionDisplacementsY(int nodeId) {
-		double value = model.solutionDisplacements.getValue(nodeId * 2 - 1);
+		double value = -model.solutionDisplacements.getValue(nodeId * 2 - 1);
 		return Double.isNaN(value) ? 0.0 : value ;
 	};
 
