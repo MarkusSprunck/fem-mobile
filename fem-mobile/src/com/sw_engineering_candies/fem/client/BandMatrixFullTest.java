@@ -477,7 +477,7 @@ public class BandMatrixFullTest {
 	}
 
 	@Test
-	public void solveConjugateGradient_EiffelTowerModel_Solved() {
+	public void solveConjugateGradient_EiffelTowerModel_SumOfForcesEqualsNull() {
 
 		// ARRANGE
 		final BandMatrixFull A = model.stiffnessRearanged;
@@ -489,12 +489,17 @@ public class BandMatrixFullTest {
 		model.stiffness.times(x_result, forcesCalculated);
 
 		// ASSERT
+		double sum = 0.0;
+		double max = Double.NEGATIVE_INFINITY;
+		double min = Double.POSITIVE_INFINITY;
 		for (int i = 0; i < forcesCalculated.getMaxRows(); i++) {
-			final double valueExpected = inputForces.getValue(i);
-			if (valueExpected > 0.0 || valueExpected < 0.0) {
-				Assert.assertEquals(1.0, forcesCalculated.getValue(i) / valueExpected, 1E-3);
-			}
+			sum += forcesCalculated.getValue(i);
+			max = Math.max(max, forcesCalculated.getValue(i));
+			min = Math.min(min, forcesCalculated.getValue(i));
 		}
+		Assert.assertEquals(0.0, sum, 1E-6);
+		Assert.assertEquals(2787.995099, max, 1E-6);
+		Assert.assertEquals(-4961.661233, min, 1E-6);
 	}
 
 }
