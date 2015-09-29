@@ -498,8 +498,8 @@ public class BandMatrixFullTest {
 			min = Math.min(min, forcesCalculated.getValue(i));
 		}
 		Assert.assertEquals(0.0, sum, 1E-6);
-		Assert.assertEquals(2787.995099, max, 1E-6);
-		Assert.assertEquals(-4961.661233, min, 1E-6);
+		Assert.assertEquals(2804.7906923210603, max, 1E-6);
+		Assert.assertEquals(-1571.4401815191948, min, 1E-6);
 	}
 
 }

@@ -85,14 +85,17 @@
 						OPTIONS.BOTTOM = 420;
 						OPTIONS.SCALE_DISPLACEMENT = 4;
 						OPTIONS.SCALE_FORCE = 0.0008;
+						OPTIONS.COLOR_CODE = 1;
 					} else if (OPTIONS.MODEL_NAME == 'Cantilever') {
 						OPTIONS.BOTTOM = 420;
 						OPTIONS.SCALE_DISPLACEMENT = 0.5;
 						OPTIONS.SCALE_FORCE = 0.0001;
+						OPTIONS.COLOR_CODE = 1;
 					} else {
 						OPTIONS.BOTTOM = 590;
 						OPTIONS.SCALE_DISPLACEMENT = 1.0;
 						OPTIONS.SCALE_FORCE = 0.001;
+						OPTIONS.COLOR_CODE = 2;
 					}
 
 					var myNode = document.getElementById('svgElements');
@@ -122,9 +125,12 @@
 
 				});
 				f1.add(OPTIONS, 'COLOR_CODE', {
-					X : 1,
-					Y : 2
-				}).name('Show Displacements');
+					"Stress X" : 1,
+					"Stress Y" : 2,
+					"Shear  Stress" : 3,
+					"Delta X" : 4,
+					"Delta Y" : 5
+				}).name('Show Displacements').listen();
 				f1.add(OPTIONS, 'GRAVITY_ACTIVE').name('Gravity').listen().onChange(function(value) {
 					if (OPTIONS.GRAVITY_ACTIVE) {
 						OPTIONS.BETA = -25.0;
@@ -136,8 +142,8 @@
 				// Create simple GUI and display for devices without sensor data
 				if (typeof window.orientation === "undefined") {
 					var f2 = gui.addFolder('Orientation');
-					f2.add(OPTIONS, 'BETA', -100.0, 100.0).step(0.5).name('Rotate X-Axis').listen();
-					f2.add(OPTIONS, 'GAMMA', -100.0, 100.0).step(0.5).name('Rotate Y-Axis').listen();
+					f2.add(OPTIONS, 'BETA', -90.0, 90.0).step(0.5).name('Rotate X-Axis').listen();
+					f2.add(OPTIONS, 'GAMMA', -90.0, 90.0).step(0.5).name('Rotate Y-Axis').listen();
 					f2.open();
 				}
 

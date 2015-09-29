@@ -8,8 +8,6 @@ public class SolverTests {
 
 	@Test
 	public void solve_cantileveredBeam10Nodes() {
-		System.out.println("\nsolve_cantileveredBeam10Nodes");
-
 		// ARRANGE
 		final Solver model = new Solver();
 		model.setYoungsModulus(210000);
@@ -25,11 +23,9 @@ public class SolverTests {
 
 		// ACT
 		model.solve(null);
-//		model.getJSON();
 
 		// ASSERT
-		assertEquals(0.05030161207750177, model.getSolutionNodeDisplacementY(cols * rows), 0.00000001);
+		assertEquals(0.05383187918768191, model.getSolutionNodeDisplacementY(cols * rows), 0.00000001);
 	}
-
 
 }

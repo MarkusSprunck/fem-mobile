@@ -68,9 +68,9 @@ public class FemMobile implements EntryPoint {
 	private static void initModel() {
 		model = new Solver();
 		if ("Cantilever".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createDefaultModel(700, 100, 40, 6, 0, false).toString());
+			model.createModel(ModelFactory.createDefaultModel(700, 100, 35, 6, 0, false).toString());
 		} else if ("Beam".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createDefaultModel(700, 100, 40, 6, 0, true).toString());
+			model.createModel(ModelFactory.createDefaultModel(700, 100, 35, 6, 0, true).toString());
 		} else if ("Eiffel Tower".equalsIgnoreCase(modelName)) {
 			model.createModel(ModelFactory.createEiffelTowerModel(3.0, 3.0));
 		}
@@ -84,18 +84,18 @@ public class FemMobile implements EntryPoint {
 		gamma = Double.valueOf(getGamma());
 		isGravityActive = Boolean.parseBoolean(isGravityActive());
 		selecedNodeId = (null != getSelecedNodeId()) ? getSelecedNodeId() : "";
-		
+
 		if (!modelName.equalsIgnoreCase(getModelName())) {
 			modelName = getModelName();
 			initModel();
 		}
-		
+
 		if (isGravityActive) {
 			model.solve(model.caluculateInputForcesGravity(beta, gamma));
 		} else {
 			model.solve(model.caluculateInputForcesSingle(forceX, forceY, selecedNodeId));
 		}
-		
+
 		renderModel();
 	}
 
@@ -156,6 +156,9 @@ public class FemMobile implements EntryPoint {
 		exportStaticMethod9();
 		exportStaticMethod10();
 		exportStaticMethod11();
+		exportStaticMethod12();
+		exportStaticMethod13();
+		exportStaticMethod14();
 
 		final Timer timerGraficUpdate = new Timer() {
 			@Override
@@ -180,22 +183,22 @@ public class FemMobile implements EntryPoint {
 
 	public static double getSolutionForcesX(int nodeId) {
 		double value = model.solutionForces.getValue(nodeId * 2 - 2);
-		return Double.isNaN(value) ? 0.0 : value ;
+		return Double.isNaN(value) ? 0.0 : value;
 	};
 
 	public static double getSolutionForcesY(int nodeId) {
 		double value = model.solutionForces.getValue(nodeId * 2 - 1);
-		return Double.isNaN(value) ? 0.0 : value ;
+		return Double.isNaN(value) ? 0.0 : value;
 	};
 
 	public static double getSolutionDisplacementsX(int nodeId) {
 		double value = model.solutionDisplacements.getValue(nodeId * 2 - 2);
-		return Double.isNaN(value) ? 0.0 : value ;
+		return Double.isNaN(value) ? 0.0 : value;
 	};
 
 	public static double getSolutionDisplacementsY(int nodeId) {
 		double value = -model.solutionDisplacements.getValue(nodeId * 2 - 1);
-		return Double.isNaN(value) ? 0.0 : value ;
+		return Double.isNaN(value) ? 0.0 : value;
 	};
 
 	public static boolean isFixedY(int nodeId) {
@@ -212,6 +215,48 @@ public class FemMobile implements EntryPoint {
 
 	public static double getY(int elementId, int cornerId) {
 		return -model.nodes[elementId][cornerId].y;
+	};
+
+	public static double getStressX(int elementId) {
+		return model.getStressX(elementId);
+	};
+
+	public static double getStressY(int elementId) {
+		return model.getStressY(elementId);
+	};
+
+	public static double getShearStress(int elementId) {
+		return model.getShearStress(elementId);
+	};
+
+	public static double getColorCode(int elementId, int type) {
+		double value = 0.0;
+
+		switch (type) {
+		case 1: {
+			value = getStressX(elementId);
+			break;
+		}
+		case 2: {
+			value = getStressY(elementId);
+			break;
+		}
+		case 3: {
+			value = getShearStress(elementId);
+			break;
+		}
+		case 4: {
+			value = (getSolutionDisplacementsX(getNodeId(elementId, 1)) + getSolutionDisplacementsX(getNodeId(elementId, 2)) + getSolutionDisplacementsX(getNodeId(
+					elementId, 3))) / 3.0;
+			break;
+		}
+		case 5: {
+			value = (getSolutionDisplacementsY(getNodeId(elementId, 1)) + getSolutionDisplacementsY(getNodeId(elementId, 2)) + getSolutionDisplacementsY(getNodeId(
+					elementId, 3))) / 3.0;
+			break;
+		}
+		}
+		return value;
 	};
 
 	public static native void exportStaticMethod1() /*-{
@@ -256,6 +301,18 @@ public class FemMobile implements EntryPoint {
 
 	public static native void exportStaticMethod11() /*-{
 		$wnd.fem_getY = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getY(II));
+	}-*/;
+
+	public static native void exportStaticMethod12() /*-{
+		$wnd.fem_getStressX = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getStressX(I));
+	}-*/;
+
+	public static native void exportStaticMethod13() /*-{
+		$wnd.fem_getStressY = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getStressY(I));
+	}-*/;
+
+	public static native void exportStaticMethod14() /*-{
+		$wnd.fem_getColorCode = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getColorCode(II));
 	}-*/;
 
 }

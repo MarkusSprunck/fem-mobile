@@ -66,13 +66,13 @@ public class ModelFactory {
 		result.append("N 20 " + (offsetX - zoomX * 64.5) + " " + zoomY * 12).append("\n");
 		result.append("N 21 " + (offsetX - zoomX * 61.5) + " " + zoomY * 8.5).append("\n");
 		result.append("N 22 " + (offsetX - zoomX * 71) + " " + zoomY * 8.5).append("\n");
-		result.append("N 23 " + (offsetX - zoomX * 68) + " " + zoomY * 5).append("\n");
+		result.append("N 23 " + (offsetX - zoomX * 68.2) + " " + zoomY * 4.8).append("\n");
 		result.append("N 24 " + (offsetX - zoomX * 65) + " " + zoomY * 0).append("\n");
 		result.append("N 25 " + (offsetX - zoomX * 76) + " " + zoomY * 0).append("\n");
 		result.append("N 26 " + (offsetX - zoomX * 18) + " " + zoomY * 24).append("\n");
-		result.append("N 27 " + (offsetX - zoomX * 27) + " " + zoomY * 24).append("\n");
-		result.append("N 28 " + (offsetX - zoomX * 34.5) + " " + zoomY * 24).append("\n");
-		result.append("N 29 " + (offsetX - zoomX * 41.7) + " " + zoomY * 24).append("\n");
+		result.append("N 27 " + (offsetX - zoomX * 26.5) + " " + zoomY * 24).append("\n");
+		result.append("N 28 " + (offsetX - zoomX * 34.5) + " " + zoomY * 24.5).append("\n");
+		result.append("N 29 " + (offsetX - zoomX * 41.5) + " " + zoomY * 24.5).append("\n");
 		result.append("N 30 " + (offsetX - zoomX * 49.5) + " " + zoomY * 24).append("\n");
 		result.append("N 31 " + (offsetX - zoomX * 58) + " " + zoomY * 24).append("\n");
 		result.append("N 32 " + (offsetX - zoomX * 15) + " " + zoomY * 27.5).append("\n");
@@ -126,7 +126,7 @@ public class ModelFactory {
 		result.append("N 80 " + (offsetX - zoomX * 46.3) + " " + zoomY * 62).append("\n");
 		result.append("N 81 " + (offsetX - zoomX * 27) + " " + zoomY * 65).append("\n");
 		result.append("N 82 " + (offsetX - zoomX * 33.5) + " " + zoomY * 65).append("\n");
-		result.append("N 83 " + (offsetX - zoomX * 43) + " " + zoomY * 65).append("\n");
+		result.append("N 83 " + (offsetX - zoomX * 42.5) + " " + zoomY * 65).append("\n");
 		result.append("N 84 " + (offsetX - zoomX * 49) + " " + zoomY * 65).append("\n");
 		result.append("N 85 " + (offsetX - zoomX * 30.5) + " " + zoomY * 67).append("\n");
 		result.append("N 86 " + (offsetX - zoomX * 37.7) + " " + zoomY * 67).append("\n");
@@ -138,7 +138,7 @@ public class ModelFactory {
 		result.append("N 92 " + (offsetX - zoomX * 48) + " " + zoomY * 69).append("\n");
 		result.append("N 93 " + (offsetX - zoomX * 51) + " " + zoomY * 69).append("\n");
 		result.append("N 94 " + (offsetX - zoomX * 31) + " " + zoomY * 72).append("\n");
-		result.append("N 95 " + (offsetX - zoomX * 37.7) + " " + zoomY * 72).append("\n");
+		result.append("N 95 " + (offsetX - zoomX * 37.9) + " " + zoomY * 72).append("\n");
 		result.append("N 96 " + (offsetX - zoomX * 45) + " " + zoomY * 72).append("\n");
 		result.append("N 97 " + (offsetX - zoomX * 29) + " " + zoomY * 75).append("\n");
 		result.append("N 98 " + (offsetX - zoomX * 35) + " " + zoomY * 75).append("\n");
@@ -557,12 +557,15 @@ public class ModelFactory {
 		result.append("E 309 198 200 201").append("\n");
 		result.append("E 310 199 202 200").append("\n");
 		result.append("E 311 200 202 201").append("\n");
-		result.append("D 25 x 0.0").append("\n");
+		result.append("D 1 x 0.0").append("\n");
 		result.append("D 1 y 0.0").append("\n");
+		result.append("D 2 x 0.0").append("\n");
 		result.append("D 2 y 0.0").append("\n");
+		result.append("D 24 x 0.0").append("\n");
 		result.append("D 24 y 0.0").append("\n");
+		result.append("D 25 x 0.0").append("\n");
 		result.append("D 25 y 0.0").append("\n");
-		result.append("F 13 y 0.01").append("\n");
+		result.append("F 13 y 0.00001").append("\n");
 
 		return result.toString();
 	}
@@ -583,12 +586,14 @@ public class ModelFactory {
 			for (int row = 1; row < maxRows; row++) {
 				final int firstElementId = row * 2 - 1 + (maxRows - 1) * 2 * (col - 1);
 				final int secondElementId = row * 2 + (maxRows - 1) * 2 * (col - 1);
-				final int node1Id = row + maxRows * (col - 1);
-				final int node2Id = row + maxRows * col;
-				final int node3Id = row + 1 + maxRows * (col - 1);
-				final int node4Id = row + 1 + maxRows * (col + 1 - 1);
-				nodeText.append("E ").append(firstElementId).append(" ").append(node1Id).append(" ").append(node2Id).append(" ").append(node3Id).append("\n");
-				nodeText.append("E ").append(secondElementId).append(" ").append(node2Id).append(" ").append(node4Id).append(" ").append(node3Id).append("\n");
+				final int leftBottom = row + maxRows * col;
+				final int leftTop = row + 1 + maxRows * col;
+				final int rightBottom = row + maxRows * (col - 1);
+				final int rightTop = row + 1 + maxRows * (col - 1);
+				nodeText.append("E ").append(firstElementId).append(" ").append(leftBottom).append(" ").append(leftTop).append(" ").append(rightTop)
+						.append("\n");
+				nodeText.append("E ").append(secondElementId).append(" ").append(leftBottom).append(" ").append(rightTop).append(" ").append(rightBottom)
+						.append("\n");
 			}
 		}
 

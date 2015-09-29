@@ -65,6 +65,9 @@ public class Solver {
 	/** Resulting forces in N after solving */
 	protected Vector solutionForces;
 
+	/** Resulting stress in N after solving */
+	protected Vector solutionStress;
+
 	/** Input displacements in mm */
 	protected Vector inputDisplacements;
 
@@ -93,16 +96,12 @@ public class Solver {
 	 * Parse model description and create global stiffness matrix
 	 */
 	public void createModel(final String model) {
-		final double start = System.currentTimeMillis();
-
 		bandWidthExpected = parseModel(model);
 		stiffness = calulateSystemStiffnessMatrix();
 		stiffnessRearanged = rearangeSystemStiffnesMatrix();
 		solutionForces = new Vector(stiffness.getMaxRows());
-		solutionDisplacements  = new Vector(stiffness.getMaxRows());
-
-		final double end = System.currentTimeMillis();
-		System.out.println("stiffness matrix created [" + (end - start) + "ms]");
+		solutionStress = new Vector(numberOfElements * 3);
+		solutionDisplacements = new Vector(stiffness.getMaxRows());
 	}
 
 	/**
@@ -120,6 +119,8 @@ public class Solver {
 
 		this.stiffness.times(solutionDisplacements, solutionForces);
 		isSolved = true;
+
+		calulateStressVector();
 	}
 
 	/**
@@ -140,7 +141,7 @@ public class Solver {
 		// Create forces for nodes which are not fixed
 		forces = new Vector(maxRows);
 		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
-			final double area = calculateAreaOfElement(elementId);
+			final double area = areaOfElement(elementId);
 			for (int cornerId = 1; cornerId < 4; cornerId++) {
 				int nodeId = getNodeIdByElementId(elementId, cornerId);
 				if (!isNodeFixedInYAxis(nodeId)) {
@@ -174,7 +175,7 @@ public class Solver {
 		forces = new Vector(maxRows);
 		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
 
-			final double area = calculateAreaOfElement(elementId);
+			final double area = areaOfElement(elementId);
 			for (int cornerId = 1; cornerId < 4; cornerId++) {
 
 				int nodeId = getNodeIdByElementId(elementId, cornerId);
@@ -200,22 +201,17 @@ public class Solver {
 	/**
 	 * Just calculates the area of a triangle element
 	 */
-	Double calculateAreaOfElement(final Integer elementId) {
-		// Store values to avid repeated calculations
+	Double areaOfElement(final Integer elementId) {
 		if (!elementAreas.containsKey(elementId)) {
-			final double value = 0.5 * ((-nodes[elementId][2].x + nodes[elementId][3].x) * (nodes[elementId][1].y - nodes[elementId][2].y) - (-nodes[elementId][1].x + nodes[elementId][2].x)
-					* (nodes[elementId][2].y - nodes[elementId][3].y));
-			elementAreas.put(elementId, value);
+			Node a = nodes[elementId][1];
+			Node b = nodes[elementId][2];
+			Node c = nodes[elementId][3];
+			elementAreas.put(elementId, 0.5 * ((c.x - b.x) * (a.y - b.y) - (b.x - a.x) * (b.y - c.y)));
 		}
 		return elementAreas.get(elementId);
 	}
 
-	private double[][] calculateStrainDisplacementMatrix(final int elementId, final double area) {
-
-		final double[] a = new double[4];
-		a[1] = nodes[elementId][2].x * nodes[elementId][3].y - nodes[elementId][3].x * nodes[elementId][2].y;
-		a[2] = nodes[elementId][3].x * nodes[elementId][1].y - nodes[elementId][1].x * nodes[elementId][3].y;
-		a[3] = nodes[elementId][1].x * nodes[elementId][2].y - nodes[elementId][2].x * nodes[elementId][1].y;
+	private double[][] calculateStrainDisplacementMatrix(final int elementId) {
 
 		final double[] b = new double[4];
 		b[1] = nodes[elementId][2].y - nodes[elementId][3].y;
@@ -223,9 +219,11 @@ public class Solver {
 		b[3] = nodes[elementId][1].y - nodes[elementId][2].y;
 
 		final double[] c = new double[4];
-		c[1] = -nodes[elementId][2].x + nodes[elementId][3].x;
-		c[2] = -nodes[elementId][3].x + nodes[elementId][1].x;
-		c[3] = -nodes[elementId][1].x + nodes[elementId][2].x;
+		c[1] = nodes[elementId][3].x - nodes[elementId][2].x;
+		c[2] = nodes[elementId][1].x - nodes[elementId][3].x;
+		c[3] = nodes[elementId][2].x - nodes[elementId][1].x;
+
+		final double area = areaOfElement(elementId);
 
 		final double[][] B = new double[7][4];
 		B[1][1] = b[1] / (area * 2);
@@ -234,12 +232,14 @@ public class Solver {
 		B[4][1] = 0;
 		B[5][1] = b[3] / (area * 2);
 		B[6][1] = 0;
+
 		B[1][2] = 0;
 		B[2][2] = c[1] / (area * 2);
 		B[3][2] = 0;
 		B[4][2] = c[2] / (area * 2);
 		B[5][2] = 0;
 		B[6][2] = c[3] / (area * 2);
+
 		B[1][3] = c[1] / (area * 2);
 		B[2][3] = b[1] / (area * 2);
 		B[3][3] = c[2] / (area * 2);
@@ -252,9 +252,9 @@ public class Solver {
 	/**
 	 * Stiffness matrix of a single element
 	 */
-	private double[][] calculateElementStiffnessMatrix(final double[][] D, final double[][] B, final int k, final double area) {
+	private double[][] calculateElementStiffnessMatrix(final double[][] D, final double[][] B, final int elementId) {
 
-		final double volume = area * thickness;
+		final double volume = areaOfElement(elementId) * thickness;
 		final double[][] h = new double[4][7];
 		h[1][1] = volume * (B[1][1] * D[1][1] + B[1][2] * D[2][1] + B[1][3] * D[3][1]);
 		h[2][1] = volume * (B[1][1] * D[1][2] + B[1][2] * D[2][2] + B[1][3] * D[3][2]);
@@ -316,22 +316,54 @@ public class Solver {
 		return Ke;
 	}
 
+	private void calulateStressVector() {
+
+		final double[][] D = calculateDifferentialOperatorsPlaneStressMatrix();
+		Matrix matrixD = new Matrix(3, 3);
+		for (int row = 1; row <= 3; row++) {
+			for (int col = 1; col <= 3; col++) {
+				matrixD.setValue(row - 1, col - 1, D[row][col]);
+			}
+		}
+
+		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
+
+			final double[][] B = calculateStrainDisplacementMatrix(elementId);
+			Matrix matrixB = new Matrix(6, 3);
+			for (int row = 1; row <= 6; row++) {
+				for (int col = 1; col <= 3; col++) {
+					matrixB.setValue(row - 1, col - 1, B[row][col]);
+				}
+			}
+
+			Matrix vectorDisplacements = new Matrix(1, 6);
+			for (int i = 1; i <= 3; i++) {
+				vectorDisplacements.setValue(0, i * 2 - 2, getDisplacementX(elementId, i));
+				vectorDisplacements.setValue(0, i * 2 - 1, getDisplacementY(elementId, i));
+			}
+
+			Matrix vectorStrain = vectorDisplacements.times(matrixB);
+
+			Matrix vectorStress = vectorStrain.times(matrixD);
+			solutionStress.setValue(elementId * 3 - 3, vectorStress.getValue(0, 0));
+			solutionStress.setValue(elementId * 3 - 2, vectorStress.getValue(0, 1));
+			solutionStress.setValue(elementId * 3 - 1, vectorStress.getValue(0, 2));
+		}
+	}
+
 	/**
 	 * Combines the single elements to a global stiffness matrix
 	 */
 	private BandMatrixFull calulateSystemStiffnessMatrix() {
 
-		/** Matrix of differential operators that convert displacements to strains using linear elasticity theory */
-		final double[][] D = calculateDifferentialOperatorsMatrix();
-
+		final double[][] D = calculateDifferentialOperatorsPlaneStressMatrix();
 		final double[][] KB = new double[numberOfNodes * 2][bandWidthExpected];
 
 		int bandWidthActual = 0;
 		for (int elementId = 1; elementId <= numberOfElements; elementId++) {
 
-			final double area = calculateAreaOfElement(elementId);
-			final double[][] B = calculateStrainDisplacementMatrix(elementId, area);
-			final double[][] K_e_ = calculateElementStiffnessMatrix(D, B, elementId, area);
+			final double[][] B = calculateStrainDisplacementMatrix(elementId);
+			final double[][] K_e_ = calculateElementStiffnessMatrix(D, B, elementId);
 
 			for (int i = 1; i <= 3; i++) {
 				for (int j = 1; j <= 3; j++) {
@@ -367,20 +399,35 @@ public class Solver {
 		return K;
 	}
 
-	private double[][] calculateDifferentialOperatorsMatrix() {
+	private double[][] calculateDifferentialOperatorsPlaneStressMatrix() {
 		final double[][] D = new double[4][4];
-		final double factor = youngsModulus / (1 + poissonRatio) / (1 - 2 * poissonRatio);
-		D[1][1] = (1 - poissonRatio) * factor;
+		final double factor = youngsModulus / (1 - poissonRatio * poissonRatio);
+		D[1][1] = factor;
 		D[2][1] = poissonRatio * factor;
 		D[3][1] = 0;
 		D[1][2] = poissonRatio * factor;
-		D[2][2] = (1 - poissonRatio) * factor;
+		D[2][2] = factor;
 		D[3][2] = 0;
 		D[1][3] = 0;
 		D[2][3] = 0;
-		D[3][3] = (1 - 2 * poissonRatio) / 2 * factor;
+		D[3][3] = (1 - poissonRatio) / 2 * factor;
 		return D;
 	}
+
+	//	private double[][] calculateDifferentialOperatorsPlaneStrainMatrix() {
+	//		final double[][] D = new double[4][4];
+	//		final double factor = youngsModulus / (1 + poissonRatio) / (1 - 2 * poissonRatio);
+	//		D[1][1] = (1 - poissonRatio) * factor;
+	//		D[2][1] = poissonRatio * factor;
+	//		D[3][1] = 0;
+	//		D[1][2] = poissonRatio * factor;
+	//		D[2][2] = (1 - poissonRatio) * factor;
+	//		D[3][2] = 0;
+	//		D[1][3] = 0;
+	//		D[2][3] = 0;
+	//		D[3][3] = (1 - 2 * poissonRatio) / 2 * factor;
+	//		return D;
+	//	}
 
 	private BandMatrixFull rearangeSystemStiffnesMatrix() {
 
@@ -521,11 +568,25 @@ public class Solver {
 	}
 
 	public double getDisplacementX(final int elementId, final int cornerId) {
-		return solutionDisplacements.getValue(nodes[elementId][cornerId].nodeID * 2 - 2);
+		double value = solutionDisplacements.getValue(nodes[elementId][cornerId].nodeID * 2 - 2);
+		return Double.isNaN(value) ? 0.0 : value;
 	}
 
 	public double getDisplacementY(final int elementId, final int cornerId) {
-		return solutionDisplacements.getValue(nodes[elementId][cornerId].nodeID * 2 - 1);
+		double value = solutionDisplacements.getValue(nodes[elementId][cornerId].nodeID * 2 - 1);
+		return Double.isNaN(value) ? 0.0 : value;
+	}
+
+	public double getStressX(final int elementId) {
+		return solutionStress.getValue(elementId * 3 - 3);
+	}
+
+	public double getStressY(final int elementId) {
+		return solutionStress.getValue(elementId * 3 - 2);
+	}
+
+	public double getShearStress(final int elementId) {
+		return solutionStress.getValue(elementId * 3 - 1);
 	}
 
 	public double getNodeY(final int elementId, final int cornerId) {
@@ -642,8 +703,6 @@ public class Solver {
 			this.setNodeIdByElementIdnodeID(temporaryElements.get(i)[1], 2, temporaryElements.get(i)[3]);
 			this.setNodeIdByElementIdnodeID(temporaryElements.get(i)[1], 3, temporaryElements.get(i)[4]);
 		}
-
-		System.out.println("default model created    [nodes=" + getNumberOfNodes() + ", elements=" + getNumberOfElements() + ", bandwidth=" + bandWidth + "]");
 
 		return bandWidth;
 	}

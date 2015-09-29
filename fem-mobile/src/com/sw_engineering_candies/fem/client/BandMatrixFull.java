@@ -89,21 +89,21 @@ public final class BandMatrixFull {
 		final int rowMaximum = rows;
 		final int bandwidthMid = colMaximum >> 1;
 
-			// execute band matrix multiplication
-			int index = 0;
-			int rowOffset = 0;
-			double sum = 0.0;
-			for (int row = rowStart; row < rowEnd; row++) {
-				rowOffset = row * colMaximum;
-				sum = 0.0;
-				for (int col = 0; col < colMaximum; col++) {
-					index = row - bandwidthMid + col;
-					if (index < rowMaximum && index >= 0) {
-						sum += values[col + rowOffset] * b.values[index];
-					}
+		// execute band matrix multiplication
+		int index = 0;
+		int rowOffset = 0;
+		double sum = 0.0;
+		for (int row = rowStart; row < rowEnd; row++) {
+			rowOffset = row * colMaximum;
+			sum = 0.0;
+			for (int col = 0; col < colMaximum; col++) {
+				index = row - bandwidthMid + col;
+				if (index < rowMaximum && index >= 0) {
+					sum += values[col + rowOffset] * b.values[index];
 				}
-				result.values[row] = sum;
 			}
+			result.values[row] = sum;
+		}
 	}
 
 	public void times(final BandMatrixFull B, final BandMatrixFull result) {
@@ -152,8 +152,6 @@ public final class BandMatrixFull {
 	}
 
 	public static Vector solve(final BandMatrixFull A, final Vector b, final int maxNumberOfIterations) {
-		final double start = System.currentTimeMillis();
-
 		// create local variables
 		int i = -1;
 		double rsnew = 1.0;
@@ -199,10 +197,6 @@ public final class BandMatrixFull {
 			// rsold = rsnew
 			rsold = rsnew;
 		}
-
-		final double end = System.currentTimeMillis();
-		System.out.println("conjugate gradient ready [" + (end - start) + "ms, itterations=" + i + "]");
-
 		return x;
 	}
 

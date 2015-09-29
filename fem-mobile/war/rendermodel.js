@@ -31,16 +31,16 @@
 var OPTIONS = function optionsModelRenderer() {
 	"use strict";
 	return {
-		MODEL_NAME : 'Cantilever',
+		MODEL_NAME : 'Beam',
 		GRAVITY_ACTIVE : true,
-		BETA : 0.0,
+		BETA : -60.0,
 		GAMMA : 0.0,
-		SCALE_FORCE : 0.0001,
-		SCALE_DISPLACEMENT : 0.1,
+		SCALE_FORCE : 0.0005,
+		SCALE_DISPLACEMENT : 1.5,
 		ORIENTATION : 'Normal portrait',
 		LEFT : 170,
 		BOTTOM : 420,
-		COLOR_CODE : 2
+		COLOR_CODE : 1
 	};
 }();
 
@@ -62,21 +62,19 @@ function ModelRenderer() {
 	this.graphic = document.getElementById("mySVGGui");
 
 	ModelRenderer.prototype.calculateColorRange = function() {
-		this.minColor = 250.0;
-		this.maxColor = -250.0;
+		this.minColor = 25000.0;
+		this.maxColor = -25000.0;
 		var numberOfElements = fem_getNumberOfElements();
 		var delta = 0.0;
-		for (var ele = 1; ele <= numberOfElements; ele++, points = "") {
-			if (OPTIONS.COLOR_CODE == 1) {
-				delta = (fem_getSolutionDisplacementsX(ele, 1) + fem_getSolutionDisplacementsX(ele, 2) + fem_getSolutionDisplacementsX(ele, 3)) / 3.0;
-			} else {
-				delta = (fem_getSolutionDisplacementsY(ele, 1) + fem_getSolutionDisplacementsY(ele, 2) + fem_getSolutionDisplacementsY(ele, 3)) / 3.0;
-			}
+		for (var elementId = 1; elementId <= numberOfElements; elementId++, points = "") {
+			delta = fem_getColorCode(elementId, parseInt(OPTIONS.COLOR_CODE));
 			this.minColor = Math.min(delta, this.minColor);
 			this.maxColor = Math.max(delta, this.maxColor);
 		}
-		this.minColor = Math.min(this.minColor, -0.001);
-		this.maxColor = Math.max(this.maxColor, 0.001);
+		this.minColor = Math.min(this.minColor, -0.0001);
+		this.maxColor = Math.max(this.maxColor, 0.0001);
+		this.minColor *= 1.2;
+		this.maxColor *= 1.2;
 	}
 
 	ModelRenderer.prototype.renderModel = function() {
@@ -85,36 +83,30 @@ function ModelRenderer() {
 		var points = "";
 		var numberOfElements = fem_getNumberOfElements();
 		for (var elementId = 1; elementId <= numberOfElements; elementId++, points = "") {
-
 			nodeId = fem_getNodeId(elementId, 1);
-			var delta = 0.0;
 			for (var cornerId = 1; cornerId <= 3; cornerId++) {
 
 				// get node and location
 				nodeId = fem_getNodeId(elementId, cornerId);
-				delta = delta + ((OPTIONS.COLOR_CODE == 1) ? fem_getSolutionDisplacementsX(nodeId) : fem_getSolutionDisplacementsY(nodeId));
-
 				x = OPTIONS.LEFT + fem_getX(elementId, cornerId) + fem_getSolutionDisplacementsX(nodeId) * OPTIONS.SCALE_DISPLACEMENT;
 				y = OPTIONS.BOTTOM + fem_getY(elementId, cornerId) - fem_getSolutionDisplacementsY(nodeId) * OPTIONS.SCALE_DISPLACEMENT;
 
 				// add this node to path for element
 				points += [ x, y ].join(',') + ' ';
-
 				this.renderFixtures(nodeId, x, y);
 				this.renderForces(nodeId, x, y);
 				this.renderNode(nodeId, x, y);
 			}
-			delta = delta / 3.0;
-			this.renderElement(elementId, points, delta);
+			this.renderElement(elementId, points, fem_getColorCode(elementId, parseInt(OPTIONS.COLOR_CODE)));
 		}
 	}
 
 	ModelRenderer.prototype.renderColorScala = function() {
-		var scalaNumber = 30;
+		var scalaNumber = 20;
 		var offset_x_scala = 10;
 		var offset_y_scala = 80;
 		var scala_size_x = 15;
-		var scala_size_y = 505;
+		var scala_size_y = 405;
 		var delta_y = scala_size_y / scalaNumber;
 
 		for (var index = 0; index <= scalaNumber; index++) {
@@ -135,13 +127,31 @@ function ModelRenderer() {
 				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 				text.setAttribute('id', "LT1" + index);
 			}
-			text.setAttribute('x', offset_x_scala + scala_size_x * 6.5);
+			text.setAttribute('x', offset_x_scala + scala_size_x * 5.0);
 			text.setAttribute('y', offset_y_scala + (index + 0.75) * scala_size_y / scalaNumber);
 			text.setAttribute('fill', '#FFFFFF');
-			text.textContent = value.toFixed(3) + ' mm';
+			text.textContent = value.toExponential(2).replace("e", "E");
 			var svg1 = document.getElementById("svgLegend");
 			svg1.appendChild(text);
 		}
+	}
+
+	function toFixed(x) {
+		if (Math.abs(x) < 1.0) {
+			var e = parseInt(x.toString().split('e-')[1]);
+			if (e) {
+				x *= Math.pow(10, e - 1);
+				x = '0.' + (new Array(e)).join('0') + x.toString().substring(2);
+			}
+		} else {
+			var e = parseInt(x.toString().split('+')[1]);
+			if (e > 20) {
+				e -= 20;
+				x /= Math.pow(10, e);
+				x += (new Array(e + 1)).join('0');
+			}
+		}
+		return x;
 	}
 
 	ModelRenderer.prototype.renderFixtures = function(nodeId, x, y) {
@@ -191,7 +201,7 @@ function ModelRenderer() {
 		if (null != elementSVG) {
 			elementSVG.setAttribute('cx', x);
 			elementSVG.setAttribute('cy', y);
-			elementSVG.setAttribute('r', 16);
+			elementSVG.setAttribute('r', 10);
 		}
 	}
 
