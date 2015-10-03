@@ -4,7 +4,22 @@
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Mobile FEM Example</title>
+
+
+<script type="text/javascript" src="FemMobile/FemMobile.nocache.js"></script>
+<script type="text/javascript" src="rendermodel.js"></script>
+<!-- Include meta tag to ensure proper rendering and touch zooming -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Include jQuery Mobile stylesheets -->
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+<!-- Include the jQuery library -->
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+<!-- Include the jQuery Mobile library -->
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
 <style>
 .main {
 	margin: 0px;
@@ -14,10 +29,10 @@
 
 .svg {
 	margin: 0 auto;
-	height: 100%;
 	width: 100%;
+	heigth: 80%;
 	position: absolute;
-	padding-bottom: 90%;
+	padding-bottom: 80%;
 	overflow: visible;
 	text-anchor: end;
 	z-index: 0;
@@ -28,29 +43,83 @@
 	stroke-width: 0.4;
 	stroke-linejoin: round;
 }
-</style>
 
-<script type="text/javascript" src="FemMobile/FemMobile.nocache.js"></script>
-<script type="text/javascript" src="rendermodel.js"></script>
-<script type="text/javascript" src="dat.gui.js"></script>
-<!--  <link type="text/css" rel="stylesheet" href="dat-gui-swec.css"> -->
+.ui-btn {
+    width: 120px !important;
+}
+
+</style>
 
 </head>
 
 <body class='main'>
 
-	<div id="datgui" style="position: absolute; top: 0px; right: 0px; z-index: 3;"></div>
+	<div data-role="page" id="pagetwo">
 
-	<svg xmlns="http://www.w3.org/2000/svg" class="svg" id="mySVGGui">		 
-		 <g id="svgElements" />
-		 <g id="svgNodes" />
-		 <g id="svgFixed" />
-  		 <g id="svgArrows" />
-  		 <g id="svgLegend" />
-  		 <g id="svgHeadLine">
-	     <a href="https://plus.google.com/u/0/117292523089281814301?rel=author" id="svgHeadLineLink"> </a></g>
-		 <g id="svgForce" />  	 	 
-		</svg>
+		<div data-role="header" data-theme="a" >
+		<!-- 	<p>&nbsp;FEM Mobile - by Markus Sprunck</p> -->
+			<div data-role="navbar">
+				<div data-role="controlgroup" data-type="horizontal">
+					<a href="#infoPanel" class="ui-btn ui-icon-info ui-btn-icon-left ui-shadow">Information</a>
+					<!--  -->
+					<a href="#settingPanel" class="ui-btn ui-icon-gear ui-btn-icon-left ui-shadow">Settings</a>
+				</div>
+			</div>
+		</div>
+
+		<div data-role="main" class="ui-content" >
+			<div class="ui-grid-a" >
+				<div class="ui-block-b" id="legendBlock" style="width: 0%"
+					style="padding-left: 10%; float: left; width: 100%">
+					<svg xmlns="http://www.w3.org/2000/svg" class="svg" id="mySVGGuiLegend">		 
+				     <g id="svgLegend" />
+  		 			</svg>
+				</div>
+				<div class="ui-block-b" id="graficBlock" viewBox="0 0 100 150" >
+					<svg xmlns="http://www.w3.org/2000/svg" class="svg" id="mySVGGui">		 
+					 <g id="svgElements" />
+					 <g id="svgNodes" />
+		 			 <g id="svgFixed" />
+  					 <g id="svgArrows" />
+  					 <g id="svgForce" />  	 	 
+				</svg>
+				</div>
+			</div>
+
+			<div data-role="panel" class="ui-content" data-display="overlay" id="infoPanel" 
+				class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-a ui-panel-animate ui-panel-open"
+				data-position="right">
+				<h4>This application demonstrates the implementation of a minimal Finite Element Method
+					Simulation running in a web browser and uses device orientation signals.</h4>
+			</div>
+
+			<div data-role="panel" class="ui-content" data-display="overlay" id="settingPanel" 
+				class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-a ui-panel-animate ui-panel-open"
+				data-position="right">
+				<form>
+					<select name="select-native-s" id="select-color-code" data-mini="true"  data-native-menu="false">
+						<option value="4" selected="true">Delta X</option>
+						<option value="5">Delta Y</option>
+						<option value="1">Stress X</option>
+						<option value="2">Stress Y</option>
+						<option value="3">Shear Stress</option>
+					</select> <select name="select-native-s" id="select-model" data-mini="true"  data-native-menu="false">
+						<option value="Beam">Beam</option>
+						<option value="Cantilever">Cantilever</option>
+						<option value="Eiffel Tower">Eiffel Tower</option>
+					</select> 
+					<fieldset data-role="controlgroup">
+						<label for="gravity" data-mini="true">Simulate Gravity</label> <input type="checkbox"
+							name="favcolor" id="gravity" value="gravity" checked="true" data-mini="true">
+					</fieldset>
+					<fieldset data-role="controlgroup" data-mini="true">
+						<label for="showLegend" data-mini="true">Show Legend</label> <input type="checkbox"
+							name="favcolor" id="showLegend" value="showLegend" data-mini="true">
+					</fieldset>
+				</form>
+			</div>
+		</div>
+	</div>
 
 	<noscript>
 		<div
@@ -63,105 +132,17 @@
 		 * Global variables 
 		 */
 		var modelRenderer;
-		var initReady = false;
-		var gui = new dat.GUI({
-			autoPlace : false,
-			width : 350
-		});
 
 		/**
 		 * Called by a timer defined in class Fem_sample.java 
 		 */
 		function setModel() {
-
-			if (!initReady) {
-				modelRenderer = new ModelRenderer();
-				modelRenderer.setHeadLine("Mobile Finite Element Simulation");
-
-				var f1 = gui.addFolder('Model & Forces');
-				f1.add(OPTIONS, 'MODEL_NAME', [ 'Cantilever', 'Beam', 'Eiffel Tower' ]).name('Model').listen().onChange(function(value) {
-
-					if (OPTIONS.MODEL_NAME == 'Beam') {
-						OPTIONS.BOTTOM = 420;
-						OPTIONS.SCALE_DISPLACEMENT = 4;
-						OPTIONS.SCALE_FORCE = 0.0008;
-						OPTIONS.COLOR_CODE = 1;
-					} else if (OPTIONS.MODEL_NAME == 'Cantilever') {
-						OPTIONS.BOTTOM = 420;
-						OPTIONS.SCALE_DISPLACEMENT = 0.5;
-						OPTIONS.SCALE_FORCE = 0.0001;
-						OPTIONS.COLOR_CODE = 1;
-					} else {
-						OPTIONS.BOTTOM = 590;
-						OPTIONS.SCALE_DISPLACEMENT = 1.0;
-						OPTIONS.SCALE_FORCE = 0.001;
-						OPTIONS.COLOR_CODE = 2;
-					}
-
-					var myNode = document.getElementById('svgElements');
-					while (myNode.firstChild) {
-						myNode.removeChild(myNode.firstChild);
-					}
-
-					var myNode = document.getElementById('svgNodes');
-					while (myNode.firstChild) {
-						myNode.removeChild(myNode.firstChild);
-					}
-
-					var myNode = document.getElementById('svgFixed');
-					while (myNode.firstChild) {
-						myNode.removeChild(myNode.firstChild);
-					}
-
-					var myNode = document.getElementById('svgArrows');
-					while (myNode.firstChild) {
-						myNode.removeChild(myNode.firstChild);
-					}
-
-					var myNode = document.getElementById('svgLegend');
-					while (myNode.firstChild) {
-						myNode.removeChild(myNode.firstChild);
-					}
-
-				});
-				f1.add(OPTIONS, 'COLOR_CODE', {
-					"Stress X" : 1,
-					"Stress Y" : 2,
-					"Shear  Stress" : 3,
-					"Delta X" : 4,
-					"Delta Y" : 5
-				}).name('Show Displacements').listen();
-				f1.add(OPTIONS, 'GRAVITY_ACTIVE').name('Gravity').listen().onChange(function(value) {
-					if (OPTIONS.GRAVITY_ACTIVE) {
-						OPTIONS.BETA = -25.0;
-						OPTIONS.GAMMA = 0.0;
-					}
-				});
-				f1.open();
-
-				// Create simple GUI and display for devices without sensor data
-				if (typeof window.orientation === "undefined") {
-					var f2 = gui.addFolder('Orientation');
-					f2.add(OPTIONS, 'BETA', -90.0, 90.0).step(0.5).name('Rotate X-Axis').listen();
-					f2.add(OPTIONS, 'GAMMA', -90.0, 90.0).step(0.5).name('Rotate Y-Axis').listen();
-					f2.open();
-				}
-
-				var f3 = gui.addFolder('Render Options');
-				f3.add(OPTIONS, 'SCALE_FORCE', 0.00001, 0.001).step(0.00001).name('Force *').listen();
-				f3.add(OPTIONS, 'SCALE_DISPLACEMENT', 0.0, 5.0).step(0.1).name('Displacement *').listen();
-				f3.add(OPTIONS, 'LEFT', 100, 400).step(1).name('Left').listen();
-				f3.add(OPTIONS, 'BOTTOM', 300, 800).step(1).name('Bottom').listen();
-				f3.open();
-
-				var element = document.getElementById('datgui');
-				element.appendChild(gui.domElement);
-
-				initReady = true;
-			} else {
+			if (typeof modelRenderer !== "undefined") {
 				modelRenderer.calculateColorRange();
 				modelRenderer.renderModel();
 				modelRenderer.renderColorScala();
+			} else {
+				modelRenderer = new ModelRenderer();
 			}
 		}
 
@@ -231,9 +212,10 @@
 					beta = -temp;
 				}
 
-				if (initReady && OPTIONS.GRAVITY_ACTIVE) {
+				if (typeof modelRenderer !== "undefined" && OPTIONS.GRAVITY_ACTIVE) {
 					OPTIONS.BETA = beta;
 					OPTIONS.GAMMA = gamma;
+					fem_runSimulation();
 				}
 			}
 		}
@@ -268,7 +250,90 @@
 		function getModelName() {
 			return '' + OPTIONS.MODEL_NAME;
 		}
-	</script>
 
+		$('#gravity').click(function() {
+			OPTIONS.GRAVITY_ACTIVE = this.checked;
+			if (OPTIONS.GRAVITY_ACTIVE) {
+				OPTIONS.BETA = -25.0;
+				OPTIONS.GAMMA = 0.0;
+			} else {
+				OPTIONS.BETA = 0.0;
+				OPTIONS.GAMMA = 0.0;
+			}
+			fem_runSimulation();
+		});
+
+		$('#select-model').change(function() {
+			$("#select-model option:selected").each(function() {
+				OPTIONS.MODEL_NAME = $(this).text();
+				modelChangeHandler();
+				fem_runSimulation();
+			});
+		});
+
+		$('#select-color-code').change(function() {
+			$("#select-color-code option:selected").each(function() {
+				OPTIONS.COLOR_CODE = this.value;
+				fem_runSimulation();
+			});
+		});
+
+		$('#showLegend').click(function() {
+			OPTIONS.SHOW_LEGEND = this.checked;
+			$('#legendBlock').width(OPTIONS.SHOW_LEGEND ? "15%" : "0%");
+			$('#graficBlock').width(OPTIONS.SHOW_LEGEND ? "85%" : "100%");
+			fem_runSimulation();
+		});
+
+		var modelChangeHandler = function(value) {
+
+			if (OPTIONS.MODEL_NAME == 'Beam') {
+				OPTIONS.LEFT = 50;
+				OPTIONS.BOTTOM = 160;
+				OPTIONS.SCALE_DISPLACEMENT = 4;
+				OPTIONS.SCALE_FORCE = 0.0008;
+				OPTIONS.COLOR_CODE = 1;
+			} else if (OPTIONS.MODEL_NAME == 'Cantilever') {
+				OPTIONS.LEFT = 50;
+				OPTIONS.BOTTOM = 160;
+				OPTIONS.SCALE_DISPLACEMENT = 0.5;
+				OPTIONS.SCALE_FORCE = 0.0001;
+				OPTIONS.COLOR_CODE = 1;
+			} else {
+				OPTIONS.LEFT = 42;
+				OPTIONS.BOTTOM = 470;
+				OPTIONS.SCALE_DISPLACEMENT = 0.5;
+				OPTIONS.SCALE_FORCE = 0.001;
+				OPTIONS.COLOR_CODE = 2;
+			}
+
+			var myNode = document.getElementById('svgElements');
+			while (myNode.firstChild) {
+				myNode.removeChild(myNode.firstChild);
+			}
+
+			var myNode = document.getElementById('svgNodes');
+			while (myNode.firstChild) {
+				myNode.removeChild(myNode.firstChild);
+			}
+
+			var myNode = document.getElementById('svgFixed');
+			while (myNode.firstChild) {
+				myNode.removeChild(myNode.firstChild);
+			}
+
+			var myNode = document.getElementById('svgArrows');
+			while (myNode.firstChild) {
+				myNode.removeChild(myNode.firstChild);
+			}
+
+			var myNode = document.getElementById('svgLegend');
+			while (myNode.firstChild) {
+				myNode.removeChild(myNode.firstChild);
+			}
+
+			fem_runSimulation();
+		}
+	</script>
 </body>
 </html>

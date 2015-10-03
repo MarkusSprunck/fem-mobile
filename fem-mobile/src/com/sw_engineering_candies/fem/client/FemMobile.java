@@ -37,8 +37,6 @@
 package com.sw_engineering_candies.fem.client;
 
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.user.client.Timer;
-
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
@@ -68,16 +66,16 @@ public class FemMobile implements EntryPoint {
 	private static void initModel() {
 		model = new Solver();
 		if ("Cantilever".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createDefaultModel(700, 100, 35, 6, 0, false).toString());
+			model.createModel(ModelFactory.createDefaultModel(400, 100, 16, 6, 0, false).toString());
 		} else if ("Beam".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createDefaultModel(700, 100, 35, 6, 0, true).toString());
+			model.createModel(ModelFactory.createDefaultModel(400, 100, 16, 6, 0, true).toString());
 		} else if ("Eiffel Tower".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createEiffelTowerModel(3.0, 3.0));
+			model.createModel(ModelFactory.createEiffelTowerModel(2.7, 2.7));
 		}
 		renderModel();
 	}
 
-	public void runSimulation() {
+	public static void runSimulation() {
 		forceY = Double.valueOf(getForceY());
 		forceX = Double.valueOf(getForceX());
 		beta = Double.valueOf(getBeta());
@@ -145,6 +143,7 @@ public class FemMobile implements EntryPoint {
 	@Override
 	public void onModuleLoad() {
 
+		exportRunSimulation();
 		exportStaticMethod1();
 		exportStaticMethod2();
 		exportStaticMethod3();
@@ -160,13 +159,7 @@ public class FemMobile implements EntryPoint {
 		exportStaticMethod13();
 		exportStaticMethod14();
 
-		final Timer timerGraficUpdate = new Timer() {
-			@Override
-			public void run() {
-				runSimulation();
-			}
-		};
-		timerGraficUpdate.scheduleRepeating(100);
+		runSimulation();
 	}
 
 	public static int getNumberOfElements() {
@@ -258,6 +251,10 @@ public class FemMobile implements EntryPoint {
 		}
 		return value;
 	};
+
+	public static native void exportRunSimulation() /*-{
+		$wnd.fem_runSimulation = $entry(@com.sw_engineering_candies.fem.client.FemMobile::runSimulation());
+	}-*/;
 
 	public static native void exportStaticMethod1() /*-{
 		$wnd.fem_getNumberOfNodes = $entry(@com.sw_engineering_candies.fem.client.FemMobile::getNumberOfNodes());

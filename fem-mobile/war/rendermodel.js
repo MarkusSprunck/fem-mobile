@@ -38,9 +38,10 @@ var OPTIONS = function optionsModelRenderer() {
 		SCALE_FORCE : 0.0005,
 		SCALE_DISPLACEMENT : 1.5,
 		ORIENTATION : 'Normal portrait',
-		LEFT : 170,
-		BOTTOM : 420,
-		COLOR_CODE : 1
+		LEFT : 50,
+		BOTTOM : 160,
+		COLOR_CODE : 4,
+		SHOW_LEGEND : false
 	};
 }();
 
@@ -60,6 +61,7 @@ function ModelRenderer() {
 	this.maxColor = -20;
 
 	this.graphic = document.getElementById("mySVGGui");
+	this.graphicLegend = document.getElementById("mySVGGuiLegend");
 
 	ModelRenderer.prototype.calculateColorRange = function() {
 		this.minColor = 25000.0;
@@ -102,11 +104,11 @@ function ModelRenderer() {
 	}
 
 	ModelRenderer.prototype.renderColorScala = function() {
-		var scalaNumber = 20;
+		var scalaNumber = 12;
 		var offset_x_scala = 10;
-		var offset_y_scala = 80;
+		var offset_y_scala = 20;
 		var scala_size_x = 15;
-		var scala_size_y = 405;
+		var scala_size_y = 200;
 		var delta_y = scala_size_y / scalaNumber;
 
 		for (var index = 0; index <= scalaNumber; index++) {
@@ -119,7 +121,8 @@ function ModelRenderer() {
 			var elementSVG = this.getPolygonElementSVG(index, "svgLegend");
 			if (null != elementSVG) {
 				elementSVG.setAttribute('points', cubePoints.trim());
-				elementSVG.setAttribute('style', "fill: " + this.getColor(value) + "; stroke: " + this.getColor(value));
+				elementSVG.setAttribute('style', "fill: " + this.getColor(value) + "; stroke: " + this.getColor(value) + "; opacity:"
+						+ (OPTIONS.SHOW_LEGEND ? 1.0 : 0.0));
 			}
 
 			var text = document.getElementById("LT1" + index);
@@ -127,10 +130,11 @@ function ModelRenderer() {
 				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 				text.setAttribute('id', "LT1" + index);
 			}
-			text.setAttribute('x', offset_x_scala + scala_size_x * 5.0);
+			text.setAttribute('x', offset_x_scala + scala_size_x * 6.5);
 			text.setAttribute('y', offset_y_scala + (index + 0.75) * scala_size_y / scalaNumber);
-			text.setAttribute('fill', '#FFFFFF');
+			text.setAttribute('fill', '#000000');
 			text.textContent = value.toExponential(2).replace("e", "E");
+			text.setAttribute('style', "opacity:" + (OPTIONS.SHOW_LEGEND ? 1.0 : 0.0));
 			var svg1 = document.getElementById("svgLegend");
 			svg1.appendChild(text);
 		}
@@ -164,7 +168,7 @@ function ModelRenderer() {
 			var elementSVG = this.getPolygonElementSVG('FIX_V' + nodeId, "svgFixed");
 			if (null != elementSVG) {
 				elementSVG.setAttribute('points', trianglePoints.trim());
-				elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.5");
+				elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.2");
 			}
 		}
 		if (fem_isFixedY(nodeId)) {
@@ -175,7 +179,7 @@ function ModelRenderer() {
 			var elementSVG = this.getPolygonElementSVG('FIX_H' + nodeId, "svgFixed");
 			if (null != elementSVG) {
 				elementSVG.setAttribute('points', trianglePoints.trim());
-				elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.5");
+				elementSVG.setAttribute('style', "stroke: #FFFFFF; fill-opacity: 0.2");
 			}
 		}
 	}
@@ -218,34 +222,6 @@ function ModelRenderer() {
 		green = Math.sin(mean + 1) * 127 + 128;
 		blue = Math.sin(mean * 1.5 + 4) * 127 + 128;
 		return '#' + toHex(red) + toHex(green) + toHex(blue);
-	}
-
-	ModelRenderer.prototype.setHeadLine = function(value) {
-		var text = document.getElementById("TI1");
-		if (null == text) {
-			text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-			text.setAttribute('id', "TI1");
-			text.setAttribute('style', 'text-anchor: start; font-size: 1.4em;');
-			text.setAttribute('fill', '#FFFFFF');
-			text.setAttribute('x', 10);
-			text.setAttribute('y', 25);
-			var svg1 = document.getElementById("svgHeadLine");
-			svg1.appendChild(text);
-		}
-		text.textContent = value;
-
-		var link = document.getElementById("SL2");
-		if (null == link) {
-			link = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-			link.setAttribute('id', "SL2");
-			link.setAttribute('style', 'text-anchor: start;');
-			link.setAttribute('fill', '#8181F7');
-			link.setAttribute('x', 10);
-			link.setAttribute('y', 45);
-			var svg1 = document.getElementById("svgHeadLineLink");
-			svg1.appendChild(link);
-			link.textContent = "by Markus Sprunck"
-		}
 	}
 
 	ModelRenderer.prototype.getPolygonElementSVG = function(id, groupId) {
@@ -382,6 +358,7 @@ function ModelRenderer() {
 				var factor = 1.0;
 				_that.forceY = (y2 - _that.mouseDownY) * factor;
 				_that.forceX = (x2 - _that.mouseDownX) * factor;
+				fem_runSimulation();
 			}
 		}
 		var elementSVG = _that.getCircleElementSVG(_that.activeNodeId, "svgNodes");
