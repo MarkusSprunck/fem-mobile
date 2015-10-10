@@ -4,38 +4,39 @@
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="initial-scale=1">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Mobile FEM Example</title>
 
 
 <script type="text/javascript" src="FemMobile/FemMobile.nocache.js"></script>
 <script type="text/javascript" src="rendermodel.js"></script>
+
 <!-- Include meta tag to ensure proper rendering and touch zooming -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <!-- Include jQuery Mobile stylesheets -->
 <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+
 <!-- Include the jQuery library -->
 <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+
 <!-- Include the jQuery Mobile library -->
 <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 
 <style>
-.main {
-	margin: 0px;
-	background-color: #000;
-	overflow: hidden;
+div.ui-content {
+	padding-top: 5px !important;
+	padding-left: 10px !important;
 }
 
 .svg {
+	top: 80px !important;
 	margin: 0 auto;
-	width: 100%;
-	heigth: 80%;
+	width: 90%;
 	position: absolute;
-	padding-bottom: 80%;
 	overflow: visible;
 	text-anchor: end;
 	z-index: 0;
+	background-color: #2a2a2a;
 }
 
 .svg polygon {
@@ -45,37 +46,43 @@
 }
 
 .ui-btn {
-    width: 120px !important;
+	width: 120px !important;
 }
 
+.ui-mini {
+	margin: .0em;
+}
+
+label {
+	font-size: 14px !important;
+}
 </style>
 
 </head>
 
 <body class='main'>
 
-	<div data-role="page" id="pagetwo">
+	<div class="ui-body-b" data-role="page">
 
-		<div data-role="header" data-theme="a" >
-		<!-- 	<p>&nbsp;FEM Mobile - by Markus Sprunck</p> -->
-			<div data-role="navbar">
-				<div data-role="controlgroup" data-type="horizontal">
-					<a href="#infoPanel" class="ui-btn ui-icon-info ui-btn-icon-left ui-shadow">Information</a>
-					<!--  -->
-					<a href="#settingPanel" class="ui-btn ui-icon-gear ui-btn-icon-left ui-shadow">Settings</a>
-				</div>
-			</div>
+		<div data-role="header">
+			<a href="#popupLogin" data-rel="popup" data-position-to="window"
+				class="ui-btn ui-icon-edit ui-btn-icon-notext ui-corner-all" data-transition="pop">Edit</a>
+			<!-- a/#popupLogin -->
+			<a href="#infoPanel" class="ui-btn ui-icon-info ui-btn-icon-notext ui-corner-all"
+				data-transition="pop">About</a>
+			<!-- a/#infoPanel -->
 		</div>
+		<!-- div/header -->
 
-		<div data-role="main" class="ui-content" >
-			<div class="ui-grid-a" >
-				<div class="ui-block-b" id="legendBlock" style="width: 0%"
-					style="padding-left: 10%; float: left; width: 100%">
+		<div data-role="main" class="ui-content">
+
+			<div class="ui-grid-b">
+				<div class="ui-block-b" id="legendBlock" style="width: 0%">
 					<svg xmlns="http://www.w3.org/2000/svg" class="svg" id="mySVGGuiLegend">		 
 				     <g id="svgLegend" />
   		 			</svg>
 				</div>
-				<div class="ui-block-b" id="graficBlock" viewBox="0 0 100 150" >
+				<div class="ui-block-b" id="graficBlock" viewBox="0 0 10 10">
 					<svg xmlns="http://www.w3.org/2000/svg" class="svg" id="mySVGGui">		 
 					 <g id="svgElements" />
 					 <g id="svgNodes" />
@@ -85,41 +92,78 @@
 				</svg>
 				</div>
 			</div>
+			<!-- /ui-grid-b -->
 
-			<div data-role="panel" class="ui-content" data-display="overlay" id="infoPanel" 
-				class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-a ui-panel-animate ui-panel-open"
-				data-position="right">
-				<h4>This application demonstrates the implementation of a minimal Finite Element Method
-					Simulation running in a web browser and uses device orientation signals.</h4>
+			<div data-role="panel" class="ui-content" data-display="overlay" id="infoPanel"
+				class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-b ui-panel-animate ui-panel-open"
+				data-position="right" data-theme="b">
+				<div style="padding: 0px 5px;">
+					<h3>Mobile FEM Example</h3>
+					This application demonstrates the implementation of a minimal Finite Element Method Simulation
+					running in a web browser and uses device orientation signals.
+					<p>
+						You may read more <a
+							href="http://www.sw-engineering-candies.com/blog-1/finite-element-method-simulation-running-in-the-browser-and-uses-device-orientation">here</a>
+					</p>
+				</div>
 			</div>
+			<!-- /ui-content -->
 
-			<div data-role="panel" class="ui-content" data-display="overlay" id="settingPanel" 
-				class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-a ui-panel-animate ui-panel-open"
-				data-position="right">
+			<div data-role="popup" id="popupLogin" id="popupDialog" class="ui-corner-all"
+				data-overlay-theme="a" data-theme="b" data-dismissible="true" style="max-width: 600px;">
+				<h3 class="ui-bar ui-bar-a ui-corner-all">Edit Options</h3>
 				<form>
-					<select name="select-native-s" id="select-color-code" data-mini="true"  data-native-menu="false">
-						<option value="4" selected="true">Delta X</option>
-						<option value="5">Delta Y</option>
-						<option value="1">Stress X</option>
-						<option value="2">Stress Y</option>
-						<option value="3">Shear Stress</option>
-					</select> <select name="select-native-s" id="select-model" data-mini="true"  data-native-menu="false">
-						<option value="Beam">Beam</option>
-						<option value="Cantilever">Cantilever</option>
-						<option value="Eiffel Tower">Eiffel Tower</option>
-					</select> 
-					<fieldset data-role="controlgroup">
-						<label for="gravity" data-mini="true">Simulate Gravity</label> <input type="checkbox"
-							name="favcolor" id="gravity" value="gravity" checked="true" data-mini="true">
-					</fieldset>
-					<fieldset data-role="controlgroup" data-mini="true">
-						<label for="showLegend" data-mini="true">Show Legend</label> <input type="checkbox"
-							name="favcolor" id="showLegend" value="showLegend" data-mini="true">
-					</fieldset>
+					<div style="padding: 10px 20px;">
+						<fieldset class="ui-grid-a">
+							<div class="ui-block-a" style="margin-bottom: 25px;">
+								<label for="select-color-code">Color Code:</label>
+								<!-- combobox -->
+								<select name="select-native-s" id="select-color-code" data-native-menu="true"
+									data-mini="true">
+									<option value="4" selected="true">Delta X</option>
+									<option value="5">Delta Y</option>
+									<option value="1">Stress X</option>
+									<option value="2">Stress Y</option>
+									<option value="3">Shear Stress</option>   
+								</select>
+							</div>
+							<!-- <div class="ui-block-a"> -->
+							<div class="ui-block-b" style="margin-bottom: 25px;">
+								<label for="select-model">Model:</label>
+								<!-- combobox -->
+								<select name="select-native-s" id="select-model" data-native-menu="true" data-mini="true">
+									<option value="Beam">Beam</option>
+									<option value="Cantilever">Cantilever</option>
+									<option value="Eiffel Tower">Eiffel Tower</option>
+								</select>
+							</div>
+							<!-- <div class="ui-block-b"> -->
+
+							<div class="ui-block-a">
+								<label for="gravity-fieldset">Forces:</label>
+								<fieldset data-role="controlgroup" id="gravity-fieldset">
+									<label for="gravity">Gravity</label> <input type="checkbox" name="favcolor" id="gravity"
+										value="gravity" data-mini="true">
+								</fieldset>
+							</div>
+							<!-- ui-block"> -->
+							<div class="ui-block-b">
+								<label for="showLegend-fieldset">Display Options:</label>
+								<fieldset data-role="controlgroup" id="showLegend-fieldset">
+									<label for="showLegend">Show Legend</label> <input type="checkbox" name="favcolor"
+										id="showLegend" value="showLegend" data-mini="true">
+								</fieldset>
+							</div>
+							<!-- ui-block"> -->
+						</fieldset>
+						<!-- /ui-grid-b-->
+					</div>
+					<!-- <div style="padding:10px 20px;"> -->
 				</form>
 			</div>
 		</div>
 	</div>
+	<!-- /ui-body-b -->
 
 	<noscript>
 		<div
@@ -141,6 +185,9 @@
 				modelRenderer.calculateColorRange();
 				modelRenderer.renderModel();
 				modelRenderer.renderColorScala();
+
+				$('#gravity').prop('checked', OPTIONS.GRAVITY_ACTIVE).checkboxradio("refresh");
+				;
 			} else {
 				modelRenderer = new ModelRenderer();
 			}

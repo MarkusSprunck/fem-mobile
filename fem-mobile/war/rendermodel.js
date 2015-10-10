@@ -39,7 +39,7 @@ var OPTIONS = function optionsModelRenderer() {
 		SCALE_DISPLACEMENT : 1.5,
 		ORIENTATION : 'Normal portrait',
 		LEFT : 50,
-		BOTTOM : 160,
+		BOTTOM : 260,
 		COLOR_CODE : 4,
 		SHOW_LEGEND : false
 	};
@@ -106,7 +106,7 @@ function ModelRenderer() {
 	ModelRenderer.prototype.renderColorScala = function() {
 		var scalaNumber = 12;
 		var offset_x_scala = 10;
-		var offset_y_scala = 20;
+		var offset_y_scala = 60;
 		var scala_size_x = 15;
 		var scala_size_y = 200;
 		var delta_y = scala_size_y / scalaNumber;
@@ -130,10 +130,10 @@ function ModelRenderer() {
 				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 				text.setAttribute('id', "LT1" + index);
 			}
-			text.setAttribute('x', offset_x_scala + scala_size_x * 6.5);
+			text.setAttribute('x', offset_x_scala + scala_size_x * 5.0);
 			text.setAttribute('y', offset_y_scala + (index + 0.75) * scala_size_y / scalaNumber);
-			text.setAttribute('fill', '#000000');
-			text.textContent = value.toExponential(2).replace("e", "E");
+			text.setAttribute('fill', '#FFFFFF');
+			text.textContent = value.toExponential(1).replace("e", "E");
 			text.setAttribute('style', "opacity:" + (OPTIONS.SHOW_LEGEND ? 1.0 : 0.0));
 			var svg1 = document.getElementById("svgLegend");
 			svg1.appendChild(text);
