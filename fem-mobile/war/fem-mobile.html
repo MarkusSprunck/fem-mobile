@@ -24,10 +24,17 @@
 <body class='main'>
 	<div class="ui-body-b" data-role="page">
 		<div data-role="header">
-			<a href="#popupLogin" data-rel="popup" data-position-to="window" class="ui-btn ui-icon-edit ui-btn-icon-notext ui-corner-all" data-transition="pop">Edit</a>
-			<!-- a/#popupLogin -->
-			<a href="#infoPanel" class="ui-btn ui-icon-info ui-btn-icon-notext ui-corner-all" data-transition="pop">About</a>
-			<!-- a/#infoPanel -->
+			<div data-role="navbar">
+				<!-- -->
+				<a href="#popupModelOptions" data-iconshadow="true" data-rel="popup" data-position-to="window"
+					class="ui-btn ui-shadow ui-corner-all ui-icon-grid ui-btn-icon-left ui-btn-inline" data-transition="pop">Model</a>
+				<!-- -->
+				<a href="#popupDisplayOptions" data-iconshadow="true" data-rel="popup" data-position-to="window"
+					class="ui-btn ui-shadow ui-corner-all ui-icon-eye ui-btn-icon-left ui-btn-inline" data-transition="pop">Display</a>
+				<!-- -->
+				<a href="#infoPanel" data-iconshadow="true" class="ui-btn ui-shadow ui-corner-all ui-icon-info ui-btn-icon-left ui-btn-inline" data-transition="pop">About</a>
+			</div>
+			<!-- div/navbar -->
 		</div>
 		<!-- div/header -->
 		<div data-role="main" class="ui-content">
@@ -51,11 +58,10 @@
 			<div data-role="panel" class="ui-content" data-display="overlay" id="infoPanel"
 				class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-b ui-panel-animate ui-panel-open" data-position="right" data-theme="b">
 				<div style="padding: 0px 5px;">
-					<h3>Mobile FEM Example</h3>
+					<h2>FEM Mobile</h2>
 					<a href="https://plus.google.com/u/0/117292523089281814301?rel=author">by Markus Sprunck</a>
 					<p />
-					This application demonstrates the implementation of a minimal Finite Element Method Simulation running in a web browser and uses device orientation
-					signals.
+					This application demonstrates the implementation of a minimal Finite Element Method Simulation uses device orientation signals.
 					<p />
 					It implements a Constant Strain Triangle (CST) and simulates mechanical stress and displacements.
 					<p />
@@ -64,52 +70,57 @@
 						You may read more <a
 							href="http://www.sw-engineering-candies.com/blog-1/finite-element-method-simulation-running-in-the-browser-and-uses-device-orientation">here</a>
 					</p>
+					<a ref="#" data-rel="close" class="ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-left ui-btn-inline">Ok</a>
 				</div>
 			</div>
 			<!-- /ui-content -->
-			<div data-role="popup" id="popupLogin" id="popupDialog" class="ui-corner-all" data-overlay-theme="a" data-theme="b" data-dismissible="true"
-				style="max-width: 600px;">
+			<div data-role="popup" id="popupModelOptions" class="ui-corner-all" data-overlay-theme="b" data-theme="b" data-dismissible="true">
 				<form>
 					<div style="padding: 10px 20px;">
-						<fieldset class="ui-grid-a">
-							<div class="ui-block-a" style="margin-bottom: 25px;">
-								<label for="select-color-code">Color Code:</label>
-								<!-- combobox -->
-								<select name="select-native-s" id="select-color-code" data-native-menu="true" data-mini="true">
-									<option value="4" selected="true">Delta X</option>
-									<option value="5">Delta Y</option>
-									<option value="1">Stress X</option>
-									<option value="2">Stress Y</option>
-									<option value="3">Tau</option>   
-								</select>
-							</div>
-							<!-- <div class="ui-block-a"> -->
-							<div class="ui-block-b" style="margin-bottom: 25px;">
-								<label for="select-model">Model:</label>
-								<!-- combobox -->
-								<select name="select-native-s" id="select-model" data-native-menu="true" data-mini="true">
-									<option value="Beam">Beam</option>
-									<option value="Cantilever">Cantilever</option>
-									<option value="Eiffel Tower">Eiffel Tower</option>
-								</select>
-							</div>
-							<!-- <div class="ui-block-b"> -->
-							<div class="ui-block-a">
-								<label for="gravity-fieldset">Forces:</label>
-								<fieldset data-role="controlgroup" id="gravity-fieldset">
-									<label for="gravity">Gravity</label> <input type="checkbox" name="favcolor" id="gravity" value="gravity" data-mini="true">
-								</fieldset>
-							</div>
-							<!-- ui-block"> -->
-							<div class="ui-block-b">
-								<label for="showLegend-fieldset">Show:</label>
-								<fieldset data-role="controlgroup" id="showLegend-fieldset">
-									<label for="showLegend">Legend</label> <input type="checkbox" name="favcolor" id="showLegend" value="showLegend" data-mini="true">
-								</fieldset>
-							</div>
-							<!-- ui-block"> -->
+						<!-- combobox -->
+						<label for="select-model">Select Default FEM Model:</label> <select name="select-native-s" id="select-model" data-native-menu="true">
+							<option value="Beam">Beam</option>
+							<option value="Cantilever">Cantilever</option>
+							<option value="Eiffel Tower">Eiffel Tower</option>
+						</select>
+						<!-- combobox -->
+						<label for="select-color-code">Color Code:</label> <select name="select-native-s" id="select-color-code" data-native-menu="true">
+							<option value="4" selected="true">Delta X</option>
+							<option value="5">Delta Y</option>
+							<option value="1">Stress X</option>
+							<option value="2">Stress Y</option>
+							<option value="3">Shear Stress</option>   
+						</select>
+						<!-- checkbox -->
+						<label for="gravity-fieldset">Forces:</label>
+						<fieldset data-role="controlgroup" id="gravity-fieldset">
+							<label for="gravity">Gravity</label> <input type="checkbox" name="favcolor" id="gravity" value="gravity">
 						</fieldset>
-						<!-- /ui-grid-b-->
+					</div>
+					<!-- <div style="padding:10px 20px;"> -->
+				</form>
+			</div>
+			<!-- /ui-content -->
+			<div data-role="popup" id="popupDisplayOptions" class="ui-corner-all" data-overlay-theme="b" data-theme="b" data-dismissible="true">
+				<form>
+					<div style="padding: 10px 20px;">
+						<!-- slider -->
+						<fieldset data-role="fieldcontain">
+							   <label for="slider-1">Scaling Factor Displacements:</label>  
+							<!--  -->
+							   <input type="range" name="slider-1" id="slider-scaling-displacements" value="1.0" min="0.1" step="0.1" max="2.0" data-highlight="true">
+						</fieldset>
+						<!-- slider -->
+						<fieldset data-role="fieldcontain">
+							   <label for="slider-2">Scaling Factor Forces:</label>  
+							<!--  -->
+							   <input type="range" name="slider-2" id="slider-scaling-factor" value="0.0002" min="0.0001" step="0.0001" max="0.001" data-highlight="true">
+						</fieldset>
+						<!-- checkbox -->
+						<label for="showLegend-fieldset">Show:</label>
+						<fieldset data-role="controlgroup" class="ui-field-contain">
+							<label for="showLegend">Legend</label> <input type="checkbox" name="favcolor" id="showLegend" value="showLegend">
+						</fieldset>
 					</div>
 					<!-- <div style="padding:10px 20px;"> -->
 				</form>
@@ -134,11 +145,14 @@
 		function renderModel() {
 			if (typeof modelRenderer === "undefined") {
 				modelRenderer = new ModelRenderer();
+				$("#infoPanel").panel("open", "");
 			} else {
 				modelRenderer.calculateColorRange();
 				modelRenderer.renderModel();
 				modelRenderer.renderColorScala();
 				$('#gravity').prop('checked', OPTIONS.GRAVITY_ACTIVE).checkboxradio("refresh");
+				$('#slider-scaling-factor').val(OPTIONS.SCALE_FORCE).slider("refresh");
+				$('#slider-scaling-displacements').val(OPTIONS.SCALE_DISPLACEMENT).slider("refresh");
 			}
 		}
 
@@ -163,9 +177,19 @@
 
 		$('#showLegend').click(function() {
 			OPTIONS.SHOW_LEGEND = this.checked;
-			$('#legendBlock').width(OPTIONS.SHOW_LEGEND ? "15%" : "0%");
-			$('#graficBlock').width(OPTIONS.SHOW_LEGEND ? "85%" : "100%");
+			$('#legendBlock').width(OPTIONS.SHOW_LEGEND ? "30%" : "0%");
+			$('#graficBlock').width(OPTIONS.SHOW_LEGEND ? "70%" : "100%");
 			fem_runSimulation();
+		});
+
+		$(document).on('change', '#slider-scaling-factor', function() {
+			OPTIONS.SCALE_FORCE = $(this).val();
+			modelRenderer.renderModel();
+		});
+
+		$(document).on('change', '#slider-scaling-displacements', function() {
+			OPTIONS.SCALE_DISPLACEMENT = $(this).val();
+			modelRenderer.renderModel();
 		});
 	</script>
 </body>

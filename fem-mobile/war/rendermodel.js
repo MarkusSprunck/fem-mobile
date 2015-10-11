@@ -105,8 +105,8 @@ function ModelRenderer() {
 
 	ModelRenderer.prototype.renderColorScala = function() {
 		var scalaNumber = 12;
-		var offset_x_scala = 10;
-		var offset_y_scala = 60;
+		var offset_x_scala = 0;
+		var offset_y_scala = 0;
 		var scala_size_x = 15;
 		var scala_size_y = 200;
 		var delta_y = scala_size_y / scalaNumber;
@@ -386,7 +386,7 @@ function ModelRenderer() {
 			OPTIONS.COLOR_CODE = 1;
 		} else {
 			OPTIONS.LEFT = 42;
-			OPTIONS.BOTTOM = 440;
+			OPTIONS.BOTTOM = 480;
 			OPTIONS.SCALE_DISPLACEMENT = 0.5;
 			OPTIONS.SCALE_FORCE = 0.001;
 			OPTIONS.COLOR_CODE = 2;
