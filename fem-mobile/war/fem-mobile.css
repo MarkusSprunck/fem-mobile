@@ -1,0 +1,33 @@
+div.ui-content {
+	padding-top: 5px !important;
+	padding-left: 10px !important;
+}
+
+.svg {
+	top: 80px !important;
+	margin: 0 auto;
+	width: 90%;
+	position: absolute;
+	overflow: visible;
+	text-anchor: end;
+	z-index: 0;
+	background-color: #2a2a2a;
+}
+
+.svg polygon {
+	stroke: #0F0F0F;
+	stroke-width: 0.4;
+	stroke-linejoin: round;
+}
+
+.ui-btn {
+	width: 70px !important;
+}
+
+.ui-mini {
+	margin: .0em;
+}
+
+label {
+	font-size: 14px !important;
+}

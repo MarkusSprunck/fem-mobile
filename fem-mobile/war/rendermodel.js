@@ -38,8 +38,8 @@ var OPTIONS = function optionsModelRenderer() {
 		SCALE_FORCE : 0.0005,
 		SCALE_DISPLACEMENT : 1.5,
 		ORIENTATION : 'Normal portrait',
-		LEFT : 50,
-		BOTTOM : 260,
+		LEFT : 30,
+		BOTTOM : 200,
 		COLOR_CODE : 4,
 		SHOW_LEGEND : false
 	};
@@ -130,7 +130,7 @@ function ModelRenderer() {
 				text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 				text.setAttribute('id', "LT1" + index);
 			}
-			text.setAttribute('x', offset_x_scala + scala_size_x * 5.0);
+			text.setAttribute('x', offset_x_scala + scala_size_x * 5.5);
 			text.setAttribute('y', offset_y_scala + (index + 0.75) * scala_size_y / scalaNumber);
 			text.setAttribute('fill', '#FFFFFF');
 			text.textContent = value.toExponential(1).replace("e", "E");
@@ -370,4 +370,93 @@ function ModelRenderer() {
 	this.graphic.addEventListener('mousemove', dragHandler, false);
 	this.graphic.addEventListener('touchmove', dragHandler, false);
 
+	ModelRenderer.prototype.modelChangeHandler = function(value) {
+
+		if (OPTIONS.MODEL_NAME == 'Beam') {
+			OPTIONS.LEFT = 30;
+			OPTIONS.BOTTOM = 200;
+			OPTIONS.SCALE_DISPLACEMENT = 2;
+			OPTIONS.SCALE_FORCE = 0.0002;
+			OPTIONS.COLOR_CODE = 1;
+		} else if (OPTIONS.MODEL_NAME == 'Cantilever') {
+			OPTIONS.LEFT = 30;
+			OPTIONS.BOTTOM = 200;
+			OPTIONS.SCALE_DISPLACEMENT = 0.5;
+			OPTIONS.SCALE_FORCE = 0.0002;
+			OPTIONS.COLOR_CODE = 1;
+		} else {
+			OPTIONS.LEFT = 42;
+			OPTIONS.BOTTOM = 440;
+			OPTIONS.SCALE_DISPLACEMENT = 0.5;
+			OPTIONS.SCALE_FORCE = 0.001;
+			OPTIONS.COLOR_CODE = 2;
+		}
+
+		var myNode = document.getElementById('svgElements');
+		while (myNode.firstChild) {
+			myNode.removeChild(myNode.firstChild);
+		}
+
+		var myNode = document.getElementById('svgNodes');
+		while (myNode.firstChild) {
+			myNode.removeChild(myNode.firstChild);
+		}
+
+		var myNode = document.getElementById('svgFixed');
+		while (myNode.firstChild) {
+			myNode.removeChild(myNode.firstChild);
+		}
+
+		var myNode = document.getElementById('svgArrows');
+		while (myNode.firstChild) {
+			myNode.removeChild(myNode.firstChild);
+		}
+
+		var myNode = document.getElementById('svgLegend');
+		while (myNode.firstChild) {
+			myNode.removeChild(myNode.firstChild);
+		}
+
+		fem_runSimulation();
+	}
+	
+	ModelRenderer.prototype.gravityChangeHandler = function(value) {
+		if (OPTIONS.GRAVITY_ACTIVE) {
+			OPTIONS.BETA = -25.0;
+			OPTIONS.GAMMA = 0.0;
+		} else {
+			OPTIONS.BETA = 0.0;
+			OPTIONS.GAMMA = 0.0;
+		}
+		fem_runSimulation();
+	}
+
+}
+
+function isGravityActive() {
+	return '' + OPTIONS.GRAVITY_ACTIVE;
+}
+
+function getSelecedNodeId() {
+	return '' + modelRenderer.selecedNodeId;
+}
+
+function getBeta() {
+	return '' + OPTIONS.BETA;
+}
+
+function getGamma() {
+	return '' + OPTIONS.GAMMA;
+}
+
+function getForceX() {
+	return '' + modelRenderer.forceX;
+}
+
+function getForceY() {
+	return '' + modelRenderer.forceY;
+}
+
+function getModelName() {
+	return '' + OPTIONS.MODEL_NAME;
 }

@@ -1,81 +1,36 @@
 <!doctype html>
-
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="initial-scale=1">
 <title>Mobile FEM Example</title>
-
-
+<!-- Include no catch -->
 <script type="text/javascript" src="FemMobile/FemMobile.nocache.js"></script>
+<!-- Include interface to fem model -->
 <script type="text/javascript" src="rendermodel.js"></script>
-
+<!-- Include device orientation helper -->
+<script type="text/javascript" src="device_orientation.js"></script>
 <!-- Include meta tag to ensure proper rendering and touch zooming -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <!-- Include jQuery Mobile stylesheets -->
 <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
-
 <!-- Include the jQuery library -->
 <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-
 <!-- Include the jQuery Mobile library -->
 <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
-
-<style>
-div.ui-content {
-	padding-top: 5px !important;
-	padding-left: 10px !important;
-}
-
-.svg {
-	top: 80px !important;
-	margin: 0 auto;
-	width: 90%;
-	position: absolute;
-	overflow: visible;
-	text-anchor: end;
-	z-index: 0;
-	background-color: #2a2a2a;
-}
-
-.svg polygon {
-	stroke: #0F0F0F;
-	stroke-width: 0.4;
-	stroke-linejoin: round;
-}
-
-.ui-btn {
-	width: 120px !important;
-}
-
-.ui-mini {
-	margin: .0em;
-}
-
-label {
-	font-size: 14px !important;
-}
-</style>
-
+<!-- Include the application specific stylesheets -->
+<link rel="stylesheet" href="fem-mobile.css">
 </head>
-
 <body class='main'>
-
 	<div class="ui-body-b" data-role="page">
-
 		<div data-role="header">
-			<a href="#popupLogin" data-rel="popup" data-position-to="window"
-				class="ui-btn ui-icon-edit ui-btn-icon-notext ui-corner-all" data-transition="pop">Edit</a>
+			<a href="#popupLogin" data-rel="popup" data-position-to="window" class="ui-btn ui-icon-edit ui-btn-icon-notext ui-corner-all" data-transition="pop">Edit</a>
 			<!-- a/#popupLogin -->
-			<a href="#infoPanel" class="ui-btn ui-icon-info ui-btn-icon-notext ui-corner-all"
-				data-transition="pop">About</a>
+			<a href="#infoPanel" class="ui-btn ui-icon-info ui-btn-icon-notext ui-corner-all" data-transition="pop">About</a>
 			<!-- a/#infoPanel -->
 		</div>
 		<!-- div/header -->
-
 		<div data-role="main" class="ui-content">
-
 			<div class="ui-grid-b">
 				<div class="ui-block-b" id="legendBlock" style="width: 0%">
 					<svg xmlns="http://www.w3.org/2000/svg" class="svg" id="mySVGGuiLegend">		 
@@ -93,14 +48,18 @@ label {
 				</div>
 			</div>
 			<!-- /ui-grid-b -->
-
 			<div data-role="panel" class="ui-content" data-display="overlay" id="infoPanel"
-				class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-b ui-panel-animate ui-panel-open"
-				data-position="right" data-theme="b">
+				class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-b ui-panel-animate ui-panel-open" data-position="right" data-theme="b">
 				<div style="padding: 0px 5px;">
 					<h3>Mobile FEM Example</h3>
-					This application demonstrates the implementation of a minimal Finite Element Method Simulation
-					running in a web browser and uses device orientation signals.
+					<a href="https://plus.google.com/u/0/117292523089281814301?rel=author">by Markus Sprunck</a>
+					<p />
+					This application demonstrates the implementation of a minimal Finite Element Method Simulation running in a web browser and uses device orientation
+					signals.
+					<p />
+					It implements a Constant Strain Triangle (CST) and simulates mechanical stress and displacements.
+					<p />
+					The forces are created by simulation of gravity or with mouse drags of single nodes. Just click into the model and drag mouse.
 					<p>
 						You may read more <a
 							href="http://www.sw-engineering-candies.com/blog-1/finite-element-method-simulation-running-in-the-browser-and-uses-device-orientation">here</a>
@@ -108,9 +67,8 @@ label {
 				</div>
 			</div>
 			<!-- /ui-content -->
-
-			<div data-role="popup" id="popupLogin" id="popupDialog" class="ui-corner-all"
-				data-overlay-theme="a" data-theme="b" data-dismissible="true" style="max-width: 600px;">
+			<div data-role="popup" id="popupLogin" id="popupDialog" class="ui-corner-all" data-overlay-theme="a" data-theme="b" data-dismissible="true"
+				style="max-width: 600px;">
 				<h3 class="ui-bar ui-bar-a ui-corner-all">Edit Options</h3>
 				<form>
 					<div style="padding: 10px 20px;">
@@ -118,13 +76,12 @@ label {
 							<div class="ui-block-a" style="margin-bottom: 25px;">
 								<label for="select-color-code">Color Code:</label>
 								<!-- combobox -->
-								<select name="select-native-s" id="select-color-code" data-native-menu="true"
-									data-mini="true">
+								<select name="select-native-s" id="select-color-code" data-native-menu="true" data-mini="true">
 									<option value="4" selected="true">Delta X</option>
 									<option value="5">Delta Y</option>
 									<option value="1">Stress X</option>
 									<option value="2">Stress Y</option>
-									<option value="3">Shear Stress</option>   
+									<option value="3">Tau</option>   
 								</select>
 							</div>
 							<!-- <div class="ui-block-a"> -->
@@ -138,20 +95,17 @@ label {
 								</select>
 							</div>
 							<!-- <div class="ui-block-b"> -->
-
 							<div class="ui-block-a">
 								<label for="gravity-fieldset">Forces:</label>
 								<fieldset data-role="controlgroup" id="gravity-fieldset">
-									<label for="gravity">Gravity</label> <input type="checkbox" name="favcolor" id="gravity"
-										value="gravity" data-mini="true">
+									<label for="gravity">Gravity</label> <input type="checkbox" name="favcolor" id="gravity" value="gravity" data-mini="true">
 								</fieldset>
 							</div>
 							<!-- ui-block"> -->
 							<div class="ui-block-b">
-								<label for="showLegend-fieldset">Display Options:</label>
+								<label for="showLegend-fieldset">Show:</label>
 								<fieldset data-role="controlgroup" id="showLegend-fieldset">
-									<label for="showLegend">Show Legend</label> <input type="checkbox" name="favcolor"
-										id="showLegend" value="showLegend" data-mini="true">
+									<label for="showLegend">Legend</label> <input type="checkbox" name="favcolor" id="showLegend" value="showLegend" data-mini="true">
 								</fieldset>
 							</div>
 							<!-- ui-block"> -->
@@ -164,13 +118,11 @@ label {
 		</div>
 	</div>
 	<!-- /ui-body-b -->
-
 	<noscript>
 		<div
-			style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">
-			Your web browser must have JavaScript enabled in order for this application to display correctly.</div>
+			style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">Your
+			web browser must have JavaScript enabled in order for this application to display correctly.</div>
 	</noscript>
-
 	<script type="text/javascript">
 		/**
 		 * Global variables 
@@ -178,143 +130,28 @@ label {
 		var modelRenderer;
 
 		/**
-		 * Called by a timer defined in class Fem_sample.java 
+		 * Called by GWT class Fem_sample.java 
 		 */
-		function setModel() {
-			if (typeof modelRenderer !== "undefined") {
+		function renderModel() {
+			if (typeof modelRenderer === "undefined") {
+				modelRenderer = new ModelRenderer();
+			} else {
 				modelRenderer.calculateColorRange();
 				modelRenderer.renderModel();
 				modelRenderer.renderColorScala();
-
 				$('#gravity').prop('checked', OPTIONS.GRAVITY_ACTIVE).checkboxradio("refresh");
-				;
-			} else {
-				modelRenderer = new ModelRenderer();
 			}
-		}
-
-		/**
-		 * The window.orientation is different for iOS and Android
-		 */
-		var checkOrientation = function(eventData) {
-			var previousOrientation = window.orientation;
-			if (typeof previousOrientation !== "undefined") {
-				var ua = navigator.userAgent.toLowerCase();
-				var isAndroid = ua.indexOf("android") > -1;
-				if (isAndroid) {
-					if (!previousOrientation || previousOrientation === 90) {
-						OPTIONS.ORIENTATION = 'Normal portrait';
-					} else if (previousOrientation === 0) {
-						OPTIONS.ORIENTATION = 'Landscape, rotated clockwise';
-					} else if (previousOrientation === 180) {
-						OPTIONS.ORIENTATION = 'Landscape, rotated counterclockwise';
-					} else if (previousOrientation === -90) {
-						OPTIONS.ORIENTATION = 'Portrait, upside down';
-					}
-				} else {
-					if (!previousOrientation || previousOrientation === 0) {
-						OPTIONS.ORIENTATION = 'Normal portrait';
-					} else if (previousOrientation === -90) {
-						OPTIONS.ORIENTATION = 'Landscape, rotated clockwise';
-					} else if (previousOrientation === 90) {
-						OPTIONS.ORIENTATION = 'Landscape, rotated counterclockwise';
-					} else if (previousOrientation === 180) {
-						OPTIONS.ORIENTATION = 'Portrait, upside down';
-					}
-				}
-			}
-		};
-
-		/**
-		 * Android doesn't always fire orientationChange on 180 degree turns
-		 */
-		setInterval(checkOrientation, 1000);
-
-		function resizeElements() {
-			checkOrientation(null);
-		};
-		window.onresize = resizeElements;
-
-		var deviceorientation = function(eventData) {
-			if (typeof modelRenderer !== "undefined") {
-				var beta;
-				var gamma;
-				if (OPTIONS.ORIENTATION == 'Normal portrait') {
-					beta = -eventData.beta;
-					gamma = -eventData.gamma;
-				} else if (OPTIONS.ORIENTATION == 'Landscape, rotated clockwise') {
-					beta = -eventData.gamma;
-					gamma = eventData.beta;
-				} else if (OPTIONS.ORIENTATION == 'Landscape, rotated counterclockwise') {
-					beta = eventData.gamma;
-					gamma = -eventData.beta;
-				} else if (OPTIONS.ORIENTATION == 'Portrait, upside down') {
-					beta = eventData.beta;
-					gamma = eventData.gamma;
-				}
-
-				if (modelRenderer.rotate) {
-					temp = gamma;
-					gamma = beta;
-					beta = -temp;
-				}
-
-				if (typeof modelRenderer !== "undefined" && OPTIONS.GRAVITY_ACTIVE) {
-					OPTIONS.BETA = beta;
-					OPTIONS.GAMMA = gamma;
-					fem_runSimulation();
-				}
-			}
-		}
-		window.addEventListener('deviceorientation', deviceorientation, false);
-		window.addEventListener("resize", checkOrientation, false);
-		window.addEventListener("orientationchange", checkOrientation, false);
-
-		function isGravityActive() {
-			return '' + OPTIONS.GRAVITY_ACTIVE;
-		}
-
-		function getSelecedNodeId() {
-			return '' + modelRenderer.selecedNodeId;
-		}
-
-		function getBeta() {
-			return '' + OPTIONS.BETA;
-		}
-
-		function getGamma() {
-			return '' + OPTIONS.GAMMA;
-		}
-
-		function getForceX() {
-			return '' + modelRenderer.forceX;
-		}
-
-		function getForceY() {
-			return '' + modelRenderer.forceY;
-		}
-
-		function getModelName() {
-			return '' + OPTIONS.MODEL_NAME;
 		}
 
 		$('#gravity').click(function() {
 			OPTIONS.GRAVITY_ACTIVE = this.checked;
-			if (OPTIONS.GRAVITY_ACTIVE) {
-				OPTIONS.BETA = -25.0;
-				OPTIONS.GAMMA = 0.0;
-			} else {
-				OPTIONS.BETA = 0.0;
-				OPTIONS.GAMMA = 0.0;
-			}
-			fem_runSimulation();
+			modelRenderer.gravityChangeHandler();
 		});
 
 		$('#select-model').change(function() {
 			$("#select-model option:selected").each(function() {
 				OPTIONS.MODEL_NAME = $(this).text();
-				modelChangeHandler();
-				fem_runSimulation();
+				modelRenderer.modelChangeHandler();
 			});
 		});
 
@@ -331,56 +168,6 @@ label {
 			$('#graficBlock').width(OPTIONS.SHOW_LEGEND ? "85%" : "100%");
 			fem_runSimulation();
 		});
-
-		var modelChangeHandler = function(value) {
-
-			if (OPTIONS.MODEL_NAME == 'Beam') {
-				OPTIONS.LEFT = 50;
-				OPTIONS.BOTTOM = 160;
-				OPTIONS.SCALE_DISPLACEMENT = 4;
-				OPTIONS.SCALE_FORCE = 0.0008;
-				OPTIONS.COLOR_CODE = 1;
-			} else if (OPTIONS.MODEL_NAME == 'Cantilever') {
-				OPTIONS.LEFT = 50;
-				OPTIONS.BOTTOM = 160;
-				OPTIONS.SCALE_DISPLACEMENT = 0.5;
-				OPTIONS.SCALE_FORCE = 0.0001;
-				OPTIONS.COLOR_CODE = 1;
-			} else {
-				OPTIONS.LEFT = 42;
-				OPTIONS.BOTTOM = 470;
-				OPTIONS.SCALE_DISPLACEMENT = 0.5;
-				OPTIONS.SCALE_FORCE = 0.001;
-				OPTIONS.COLOR_CODE = 2;
-			}
-
-			var myNode = document.getElementById('svgElements');
-			while (myNode.firstChild) {
-				myNode.removeChild(myNode.firstChild);
-			}
-
-			var myNode = document.getElementById('svgNodes');
-			while (myNode.firstChild) {
-				myNode.removeChild(myNode.firstChild);
-			}
-
-			var myNode = document.getElementById('svgFixed');
-			while (myNode.firstChild) {
-				myNode.removeChild(myNode.firstChild);
-			}
-
-			var myNode = document.getElementById('svgArrows');
-			while (myNode.firstChild) {
-				myNode.removeChild(myNode.firstChild);
-			}
-
-			var myNode = document.getElementById('svgLegend');
-			while (myNode.firstChild) {
-				myNode.removeChild(myNode.firstChild);
-			}
-
-			fem_runSimulation();
-		}
 	</script>
 </body>
 </html>

@@ -37,6 +37,7 @@
 package com.sw_engineering_candies.fem.client;
 
 import com.google.gwt.core.client.EntryPoint;
+
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
@@ -66,9 +67,9 @@ public class FemMobile implements EntryPoint {
 	private static void initModel() {
 		model = new Solver();
 		if ("Cantilever".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createDefaultModel(400, 100, 16, 6, 0, false).toString());
+			model.createModel(ModelFactory.createDefaultModel(500, 100, 20, 6, 0, false).toString());
 		} else if ("Beam".equalsIgnoreCase(modelName)) {
-			model.createModel(ModelFactory.createDefaultModel(400, 100, 16, 6, 0, true).toString());
+			model.createModel(ModelFactory.createDefaultModel(500, 100, 20, 6, 0, true).toString());
 		} else if ("Eiffel Tower".equalsIgnoreCase(modelName)) {
 			model.createModel(ModelFactory.createEiffelTowerModel(2.7, 2.7));
 		}
@@ -99,7 +100,7 @@ public class FemMobile implements EntryPoint {
 
 	public static native void renderModel()
 	/*-{
-		$wnd.setModel();
+		$wnd.renderModel();
 	}-*/;
 
 	public static native String getBeta()
