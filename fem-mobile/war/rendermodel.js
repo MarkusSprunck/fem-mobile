@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012-2015, Markus Sprunck
+ * Copyright (C) 2012-2016, Markus Sprunck
  * 
  * All rights reserved.
  * 
@@ -31,16 +31,16 @@
 var OPTIONS = function optionsModelRenderer() {
 	"use strict";
 	return {
-		MODEL_NAME : 'Beam',
+		MODEL_NAME : "Eiffel Tower",
+		LEFT : 42,
+		BOTTOM : 480,
+		SCALE_DISPLACEMENT : 0.5,
+		SCALE_FORCE : 0.001,
+		COLOR_CODE : 2,
 		GRAVITY_ACTIVE : true,
 		BETA : -60.0,
 		GAMMA : 0.0,
-		SCALE_FORCE : 0.0005,
-		SCALE_DISPLACEMENT : 1.5,
 		ORIENTATION : 'Normal portrait',
-		LEFT : 30,
-		BOTTOM : 200,
-		COLOR_CODE : 4,
 		SHOW_LEGEND : false
 	};
 }();
@@ -62,7 +62,7 @@ function ModelRenderer() {
 
 	this.graphic = document.getElementById("mySVGGui");
 	this.graphicLegend = document.getElementById("mySVGGuiLegend");
-
+	
 	ModelRenderer.prototype.calculateColorRange = function() {
 		this.minColor = 25000.0;
 		this.maxColor = -25000.0;

@@ -58,7 +58,7 @@ public class FemMobile implements EntryPoint {
 	/** Activates the kind of force to be applied */
 	static boolean isGravityActive = false;
 
-	static String modelName = "";
+	static String modelName = "Eiffel Tower";
 
 	public FemMobile() {
 		initModel();
