@@ -6,7 +6,7 @@
 <title>Mobile FEM Example</title>
 
 <!-- Include no catch -->
-<script type="text/javascript" src="FemMobile/FemMobile.nocache.js"></script>
+<script type="text/javascript" src="FemMobile/FemMobile.nocache.js"></script> 
 
 <!-- Include interface to fem model -->
 <script type="text/javascript" src="rendermodel.js"></script>
@@ -56,13 +56,13 @@
 		<div data-role="main" class="ui-content">
 			<div class="ui-grid-b">
 				<div class="ui-block-b" id="legendBlock" style="width: 0%">
-					<svg xmlns="http://www.w3.org/2000/svg" class="svg"
+					<svg class="svg"
 						id="mySVGGuiLegend">		 
 				     <g id="svgLegend" />
   		 			</svg>
 				</div>
 				<div class="ui-block-b" id="graficBlock" viewBox="0 0 10 10">
-					<svg xmlns="http://www.w3.org/2000/svg" class="svg" id="mySVGGui">		 
+					<svg class="svg" id="mySVGGui">		 
 					 <g id="svgElements" />
 					 <g id="svgNodes" />
 		 			 <g id="svgFixed" />
@@ -112,14 +112,14 @@
 								Tower</option>
 						</select>
 						<!-- combobox -->
-						<label for="select-color-code">Color Code:</label> <select
-							name="select-native-s" id="select-color-code"
+						<label for="select-color-code">Color Code:</label> 
+						<select 	name="select-native-s" id="select-color-code"
 							data-native-menu="true">
 							<option value="4">Delta X</option>
 							<option value="5" selected="true">Delta Y</option>
 							<option value="1">Stress X</option>
 							<option value="2">Stress Y</option>
-							<option value="3">Shear Stress</option>   
+							<option value="3">Shear Stress</option>
 						</select>
 						<!-- checkbox -->
 						<label for="gravity-fieldset">Forces:</label>
