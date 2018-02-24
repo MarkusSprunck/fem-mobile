@@ -58,7 +58,7 @@ public class FemMobile implements EntryPoint {
 	/** Activates the kind of force to be applied */
 	static boolean isGravityActive = false;
 
-	static String modelName = "Eiffel Tower";
+	static String modelName = "Eiffel";
 
 	public FemMobile() {
 		initModel();
@@ -70,7 +70,7 @@ public class FemMobile implements EntryPoint {
 			model.createModel(ModelFactory.createDefaultModel(500, 100, 20, 6, 0, false).toString());
 		} else if ("Beam".equalsIgnoreCase(modelName)) {
 			model.createModel(ModelFactory.createDefaultModel(500, 100, 20, 6, 0, true).toString());
-		} else if ("Eiffel Tower".equalsIgnoreCase(modelName)) {
+		} else if ("Eiffel".equalsIgnoreCase(modelName)) {
 			model.createModel(ModelFactory.createEiffelTowerModel(2.7, 2.7));
 		}
 		renderModel();

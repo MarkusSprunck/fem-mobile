@@ -1,0 +1,242 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="initial-scale=1">
+<title>Mobile FEM Example</title>
+
+<!-- Include no catch -->
+<script type="text/javascript" src="FemMobile/FemMobile.nocache.js"></script> 
+
+<!-- Include interface to fem model -->
+<script type="text/javascript" src="rendermodel.js"></script>
+
+<!-- Include device orientation helper -->
+<script type="text/javascript" src="device_orientation.js"></script>
+
+<!-- Include meta tag to ensure proper rendering and touch zooming -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Include jQuery Mobile style sheets -->
+<link rel="stylesheet"
+	href="./jquery.mobile/jquery.mobile-1.4.5.min.css">
+
+<!-- Include the jQuery library -->
+<script src="./jquery/jquery.min.js"></script>
+
+<!-- Include the jQuery Mobile library -->
+<script
+	src="./jquery.mobile/jquery.mobile-1.4.5.min.js"></script>
+
+<!-- Include the application specific style sheets -->
+<link rel="stylesheet" href="fem-mobile.css">
+</head>
+<body class='main'>
+	<div class="ui-body-b" data-role="page">
+		<div data-role="header">
+			<div data-role="navbar">
+				<!-- -->
+				<a href="#popupModelOptions" data-iconshadow="true" data-rel="popup"
+					data-position-to="window"
+					class="ui-btn ui-shadow ui-corner-all ui-icon-grid ui-btn-icon-left ui-btn-inline"
+					data-transition="pop">Model</a>
+				<!-- -->
+				<a href="#popupDisplayOptions" data-iconshadow="true"
+					data-rel="popup" data-position-to="window"
+					class="ui-btn ui-shadow ui-corner-all ui-icon-eye ui-btn-icon-left ui-btn-inline"
+					data-transition="pop">Display</a>
+				<!-- -->
+				<a href="#infoPanel" data-iconshadow="true"
+					class="ui-btn ui-shadow ui-corner-all ui-icon-info ui-btn-icon-left ui-btn-inline"
+					data-transition="pop">About</a>
+			</div>
+			<!-- div/navbar -->
+		</div>
+		<!-- div/header -->
+		<div data-role="main" class="ui-content">
+			<div class="ui-grid-b">
+				<div class="ui-block-b" id="legendBlock" style="width: 0%">
+					<svg class="svg"
+						id="mySVGGuiLegend">		 
+				     <g id="svgLegend" />
+  		 			</svg>
+				</div>
+				<div class="ui-block-b" id="graficBlock" viewBox="0 0 10 10">
+					<svg class="svg" id="mySVGGui">		 
+					 <g id="svgElements" />
+					 <g id="svgNodes" />
+		 			 <g id="svgFixed" />
+  					 <g id="svgArrows" />
+  					 <g id="svgForce" />  	 	 
+				</svg>
+				</div>
+			</div>
+			<!-- /ui-grid-b -->
+			<div data-role="panel" class="ui-content" data-display="overlay"
+				id="infoPanel"
+				class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-b ui-panel-animate ui-panel-open"
+				data-position="right" data-theme="b">
+				<div style="padding: 0px 5px;">
+					<h2>FEM Mobile</h2>
+					<a
+						href="https://plus.google.com/u/0/117292523089281814301?rel=author">by
+						Markus Sprunck</a>
+					<p />
+					This application demonstrates the implementation of a minimal
+					Finite Element Method Simulation uses device orientation signals.
+					<p />
+					It implements a Constant Strain Triangle (CST) and simulates
+					mechanical stress and displacements.
+					<p />
+					The forces are created by simulation of gravity or with mouse drags
+					of single nodes. Just click into the model and drag mouse.
+					<p>
+						You may read more <a
+							href="http://www.sw-engineering-candies.com/blog-1/finite-element-method-simulation-running-in-the-browser-and-uses-device-orientation">here</a>
+					</p>
+					<a ref="#" data-rel="close"
+						class="ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-left ui-btn-inline">Ok</a>
+				</div>
+			</div>
+			<!-- /ui-content -->
+			<div data-role="popup" id="popupModelOptions" class="ui-corner-all"
+				data-overlay-theme="b" data-theme="b" data-dismissible="true">
+				<form>
+					<div style="padding: 10px 20px;">
+						<!-- combobox -->
+						<label for="select-model">Select Default FEM Model:</label> 
+						<select
+							name="select-native-s" id="select-model" data-native-menu="true">
+							<option value="Beam">Beam</option>
+							<option value="Cantilever">Cantilever</option>
+							<option value="Eiffel" selected="true">Eiffel Tower</option>
+							</select>
+						<!-- combobox -->
+						<label for="select-color-code">Color Code:</label> 
+						<select 	name="select-native-s" id="select-color-code"
+							data-native-menu="true">
+							<option value="4">Delta X</option>
+							<option value="5" selected="true">Delta Y</option>
+							<option value="1">Stress X</option>
+							<option value="2">Stress Y</option>
+							<option value="3">Shear Stress</option>
+						</select>
+						<!-- checkbox -->
+						<label for="gravity-fieldset">Forces:</label>
+						<fieldset data-role="controlgroup" id="gravity-fieldset">
+							<label for="gravity">Gravity</label> <input type="checkbox"
+								name="favcolor" id="gravity" value="gravity">
+						</fieldset>
+					</div>
+					<!-- <div style="padding:10px 20px;"> -->
+				</form>
+			</div>
+			<!-- /ui-content -->
+			<div data-role="popup" id="popupDisplayOptions" class="ui-corner-all"
+				data-overlay-theme="b" data-theme="b" data-dismissible="true">
+				<form>
+					<div style="padding: 10px 20px;">
+						<!-- slider -->
+						<fieldset data-role="fieldcontain">
+							   <label for="slider-1">Scaling Factor Displacements:</label>  
+							<!--  -->
+							   <input type="range" name="slider-1"
+								id="slider-scaling-displacements" value="1.0" min="0.1"
+								step="0.1" max="2.0" data-highlight="true">
+						</fieldset>
+						<!-- slider -->
+						<fieldset data-role="fieldcontain">
+							   <label for="slider-2">Scaling Factor Forces:</label>  
+							<!--  -->
+							   <input type="range" name="slider-2" id="slider-scaling-factor"
+								value="0.0002" min="0.0001" step="0.0001" max="0.001"
+								data-highlight="true">
+						</fieldset>
+						<!-- checkbox -->
+						<label for="showLegend-fieldset">Show:</label>
+						<fieldset data-role="controlgroup" class="ui-field-contain">
+							<label for="showLegend">Legend</label> <input type="checkbox"
+								checked name="favcolor" id="showLegend" value="showLegend">
+						</fieldset>
+					</div>
+					<!-- <div style="padding:10px 20px;"> -->
+				</form>
+			</div>
+		</div>
+	</div>
+	<!-- /ui-body-b -->
+	<noscript>
+		<div
+			style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif">Your
+			web browser must have JavaScript enabled in order for this
+			application to display correctly.</div>
+	</noscript>
+	<script type="text/javascript">
+		/**
+		 * Global variables 
+		 */
+		var modelRenderer;
+
+		/**
+		 * Called by GWT class Fem_sample.java 
+		 */
+		function renderModel() {
+			if (typeof modelRenderer === "undefined") {
+				modelRenderer = new ModelRenderer();
+				// $("#infoPanel").panel("open", "");
+			} else {
+				modelRenderer.calculateColorRange();
+				modelRenderer.renderModel();
+				modelRenderer.renderColorScala();
+				$('#showLegend').prop('checked', OPTIONS.SHOW_LEGEND).checkboxradio("refresh");
+				$('#gravity').prop('checked', OPTIONS.GRAVITY_ACTIVE).checkboxradio("refresh");
+				$('#slider-scaling-factor').val(OPTIONS.SCALE_FORCE).slider("refresh");
+				$('#slider-scaling-displacements').val(OPTIONS.SCALE_DISPLACEMENT).slider("refresh");
+			}
+		}
+
+		$('#gravity').click(function() {
+			OPTIONS.GRAVITY_ACTIVE = this.checked;
+			modelRenderer.gravityChangeHandler();
+		});
+
+		$('#select-model').change(function() {
+			$("#select-model option:selected").each(function() {
+				OPTIONS.MODEL_NAME = this.value;
+				modelRenderer.modelChangeHandler();
+			});
+		});
+
+		$('#select-color-code').change(function() {
+			$("#select-color-code option:selected").each(function() {
+				OPTIONS.COLOR_CODE = this.value;
+				fem_runSimulation();
+			});
+		});
+
+		$('#showLegend').click(function() {
+			OPTIONS.SHOW_LEGEND = this.checked;
+			$('#legendBlock').width(OPTIONS.SHOW_LEGEND ? "30%" : "0%");
+			$('#graficBlock').width(OPTIONS.SHOW_LEGEND ? "70%" : "100%");
+			fem_runSimulation();
+		});
+
+		$(document).on('change', '#slider-scaling-factor', function() {
+			OPTIONS.SCALE_FORCE = $(this).val();
+			modelRenderer.renderModel();
+		});
+
+		$(document).on('change', '#slider-scaling-displacements', function() {
+			OPTIONS.SCALE_DISPLACEMENT = $(this).val();
+			modelRenderer.renderModel();
+		});
+
+		OPTIONS.COLOR_CODE = 5;
+		OPTIONS.SHOW_LEGEND = false;
+		$('#legendBlock').width(OPTIONS.SHOW_LEGEND ? "30%" : "0%");
+		$('#graficBlock').width(OPTIONS.SHOW_LEGEND ? "70%" : "100%");
+		
+		
+	</script>
+</body>
+</html>
